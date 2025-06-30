@@ -2,7 +2,7 @@
 
 namespace Hyperf\Notification\Models;
 
-use Hyperf\Database\Model\Model;
+use Hyperf\DbConnection\Model\Model;
 use Hyperf\Database\Model\Relations\MorphTo;
 
 class Notification extends Model
