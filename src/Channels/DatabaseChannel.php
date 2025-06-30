@@ -24,7 +24,7 @@ class DatabaseChannel implements ChannelInterface
                         'notifiable_type' => get_class($notifiable),
                         'notifiable_id' => $notifiable->getKey(),
                         'notification_type' => get_class($notification),
-                        'data' => $data
+                        'data_count' => is_array($data) ? count($data) : 0
                     ]);
                 }
             }
@@ -47,7 +47,7 @@ class DatabaseChannel implements ChannelInterface
                     $logger = $container->get(StdoutLoggerInterface::class);
                     if ($result) {
                         $logger->info('DatabaseChannel: 通知存储成功', [
-                            'notification_id' => $notificationModel->id
+                            'notification_id' => $notificationModel->id ?? 'unknown'
                         ]);
                     } else {
                         $logger->error('DatabaseChannel: 通知存储失败');
@@ -63,7 +63,8 @@ class DatabaseChannel implements ChannelInterface
                     $logger = $container->get(StdoutLoggerInterface::class);
                     $logger->error('DatabaseChannel: 存储通知时发生错误', [
                         'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine()
                     ]);
                 }
             }
