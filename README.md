@@ -11,6 +11,7 @@
 - ✅ 与 Laravel Notification API 完全兼容
 - ✅ 支持通知路由
 - ✅ 支持通知标记（已读/未读）
+- ✅ 支持 notifiable 别名，保持数据库类型标识一致
 
 ## 安装
 
@@ -183,7 +184,84 @@ $user->markNotificationsAsRead();
 $user->deleteNotifications();
 ```
 
-### 5. 队列化通知
+### 5. 使用 Notifiable 别名
+
+为了保持数据库中的 `notifiable_type` 字段一致，即使类名发生变化，你可以使用别名功能。系统会按以下优先级查找别名：
+
+1. `getMorphClass()` 方法（已取消）
+2. `morphClass` 属性
+3. `MORPH_CLASS` 常量（已取消）
+4. 默认使用类名
+
+#### 方式一：使用 getMorphClass() 方法
+
+```php
+<?php
+
+namespace App\Model;
+
+use Hyperf\DbConnection\Model\Model;
+use Hyperf\Notification\Notifiable;
+
+class User extends Model
+{
+    use Notifiable;
+
+    /**
+     * 返回用于多态关联的类名别名
+     */
+    public function getMorphClass(): string
+    {
+        return 'App\\Models\\User'; // 使用别名而不是实际的类名
+    }
+}
+```
+
+#### 方式二：使用 morphClass 属性
+
+```php
+<?php
+
+namespace App\Model;
+
+use Hyperf\DbConnection\Model\Model;
+use Hyperf\Notification\Notifiable;
+
+class User extends Model
+{
+    use Notifiable;
+
+    /**
+     * 指定多态关联的类名别名
+     */
+    protected string $morphClass = 'App\\Models\\User';
+}
+```
+
+#### 方式三：使用 MORPH_CLASS 常量
+
+```php
+<?php
+
+namespace App\Model;
+
+use Hyperf\DbConnection\Model\Model;
+use Hyperf\Notification\Notifiable;
+
+class User extends Model
+{
+    use Notifiable;
+
+    /**
+     * 指定多态关联的类名别名
+     */
+    public const MORPH_CLASS = 'App\\Models\\User';
+}
+```
+
+这样，无论你的类名如何变化，数据库中的 `notifiable_type` 都会保持为 `App\Models\User`，确保数据的一致性和可维护性。
+
+### 6. 队列化通知
 
 如果通知需要队列化处理，实现 `ShouldQueue` 接口：
 
