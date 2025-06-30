@@ -11,15 +11,16 @@
     ],
     "require": {
         "php": ">=8.2",
-        "hyperf/framework": "~3.1.0",
-        "hyperf/database": "~3.1.0",
-        "hyperf/async-queue": "~3.1.0",
-        "hyperf/event": "~3.1.0",
-        "hyperf/redis": "~3.1.0",
-        "hyperf/logger": "~3.1.0",
-        "hyperf/utils": "~3.1.0",
-        "hyperf/contract": "~3.1.0",
         "hyperf/amqp": "~3.1.0",
+        "hyperf/async-queue": "~3.1.0",
+        "hyperf/contract": "~3.1.0",
+        "hyperf/database": "^3.1",
+        "hyperf/db-connection": "^3.1",
+        "hyperf/event": "~3.1.0",
+        "hyperf/framework": "^3.1",
+        "hyperf/logger": "~3.1.0",
+        "hyperf/redis": "~3.1.0",
+        "hyperf/utils": "~3.1.0",
         "ramsey/uuid": "^4.0"
     },
     "require-dev": {
@@ -47,4 +48,4 @@
     },
     "minimum-stability": "stable",
     "prefer-stable": true
-} 
+}
