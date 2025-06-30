@@ -12,7 +12,8 @@ class ConfigProvider
 
         return [
             'dependencies' => [
-                // 可以在这里注册依赖注入
+                // 注册渠道管理器服务
+                ChannelManager::class => ChannelManager::class,
             ],
             'annotations' => [
                 'scan' => [

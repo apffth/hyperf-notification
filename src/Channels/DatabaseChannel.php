@@ -39,7 +39,7 @@ class DatabaseChannel implements ChannelInterface
 
         // 如果 notifiable 有 morphClass 属性，使用该属性
         if (property_exists($notifiable, 'morphClass')) {
-            return $notifiable->morphClass;
+            return $notifiable->morphClass ?: get_class($notifiable);
         }
 
         // 如果 notifiable 有 MORPH_CLASS 常量，使用该常量
