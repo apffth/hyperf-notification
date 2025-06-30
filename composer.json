@@ -1,12 +1,12 @@
 {
-    "name": "hyperf/notification",
+    "name": "apffth/hyperf-notification",
     "description": "A notification system for Hyperf framework, compatible with Laravel notifications",
     "type": "library",
     "license": "MIT",
     "authors": [
         {
-            "name": "Hyperf Notification Team",
-            "email": "team@hyperf.io"
+            "name": "apffth",
+            "email": "imtoogle@gmail.com"
         }
     ],
     "require": {
