@@ -52,6 +52,6 @@ return [
     */
     'queue' => [
         'connection' => env('NOTIFICATION_QUEUE_CONNECTION', 'default'),
-        'queue' => env('NOTIFICATION_QUEUE', 'notifications'),
+        'queue' => env('NOTIFICATION_QUEUE', 'notification'),
     ],
 ];
