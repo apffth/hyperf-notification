@@ -17,7 +17,7 @@
 ### 方法一：通过 Composer 安装（推荐）
 
 ```bash
-composer require hyperf/notification
+composer require apffth/hyperf-notification
 ```
 
 ### 方法二：本地开发安装
@@ -34,7 +34,7 @@ composer require hyperf/notification
         }
     ],
     "require": {
-        "hyperf/notification": "*"
+        "apffth/hyperf-notification": "*"
     }
 }
 ```
@@ -49,7 +49,7 @@ composer update
 ### 1. 发布配置文件
 
 ```bash
-php bin/hyperf.php vendor:publish hyperf/notification
+php bin/hyperf.php vendor:publish apffth/hyperf-notification
 ```
 
 ### 2. 运行数据库迁移
