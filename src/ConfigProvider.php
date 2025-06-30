@@ -29,6 +29,9 @@ class ConfigProvider
                     'destination' => BASE_PATH . '/config/autoload/notification.php',
                 ],
             ],
+            'listeners' => [
+                // 可以在这里注册事件监听器
+            ],
         ];
     }
 }

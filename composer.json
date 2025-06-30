@@ -39,7 +39,7 @@
     },
     "extra": {
         "hyperf": {
-            "config": "config/notification.php"
+            "config": "Hyperf\\Notification\\ConfigProvider"
         }
     },
     "config": {
