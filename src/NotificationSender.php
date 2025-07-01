@@ -167,36 +167,38 @@ class NotificationSender
     protected static function queueNotification($notifiable, Notification $notification): void
     {
         // 创建队列任务
-        $job = new class($notifiable, $notification) extends Job {
-            private string $uniqid;
+        // $job = new class($notifiable, $notification) extends Job {
+        //     private string $uniqid;
 
-            protected mixed $notifiable;
+        //     protected mixed $notifiable;
 
-            protected Notification $notification;
+        //     protected Notification $notification;
 
-            public function __construct(mixed $notifiable, Notification $notification)
-            {
-                $this->uniqid       = Str::uuid()->toString();
-                $this->notifiable   = $notifiable;
-                $this->notification = $notification;
-            }
+        //     public function __construct(mixed $notifiable, Notification $notification)
+        //     {
+        //         $this->uniqid       = Str::uuid()->toString();
+        //         $this->notifiable   = $notifiable;
+        //         $this->notification = $notification;
+        //     }
 
-            public function handle(): void
-            {
-                try {
-                    // 检查是否应该发送
-                    if (! $this->notification->shouldSend($this->notifiable)) {
-                        return;
-                    }
+        //     public function handle(): void
+        //     {
+        //         try {
+        //             // 检查是否应该发送
+        //             if (! $this->notification->shouldSend($this->notifiable)) {
+        //                 return;
+        //             }
 
-                    NotificationSender::sendNow($this->notifiable, $this->notification);
-                } catch (Throwable $e) {
-                    // 处理失败
-                    $this->notification->failed($e);
-                    throw $e;
-                }
-            }
-        };
+        //             NotificationSender::sendNow($this->notifiable, $this->notification);
+        //         } catch (Throwable $e) {
+        //             // 处理失败
+        //             $this->notification->failed($e);
+        //             throw $e;
+        //         }
+        //     }
+        // };
+
+        $job = new NotificationJob($notifiable, $notification);
 
         // 推送到队列
         // dispatch($job, $notification->getDelay() ?? 0, $notification->getTries() ?? 3, $notification->getQueueName() ?? 'notification');
