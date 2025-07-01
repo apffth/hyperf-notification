@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Hyperf\Notification;
+namespace Apffth\Hyperf\Notification;
 
-use Hyperf\Notification\Contracts\EventDispatcherInterface;
+use Apffth\Hyperf\Notification\Contracts\EventDispatcherInterface;
 
 class ConfigProvider
 {

@@ -1,16 +1,16 @@
 <?php
 
-namespace Hyperf\Notification;
+namespace Apffth\Hyperf\Notification;
 
 use Carbon\Carbon;
-use Hyperf\Notification\Models\Notification as NotificationModel;
+use Apffth\Hyperf\Notification\Models\Notification as NotificationModel;
 use Hyperf\Database\Model\Relations\MorphMany;
 
 trait Notifiable
 {
     /**
      * 发送通知。
-     * @param \Hyperf\Notification\Notification $notification
+     * @param \Apffth\Hyperf\Notification\Notification $notification
      * @return void
      */
     public function notify(Notification $notification)

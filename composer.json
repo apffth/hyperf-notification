@@ -32,17 +32,17 @@
     },
     "autoload": {
         "psr-4": {
-            "Hyperf\\Notification\\": "src/"
+            "Apffth\\Hyperf\\Notification\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Hyperf\\Notification\\Tests\\": "tests/"
+            "Apffth\\Hyperf\\Notification\\Tests\\": "tests/"
         }
     },
     "extra": {
         "hyperf": {
-            "config": "Hyperf\\Notification\\ConfigProvider"
+            "config": "Apffth\\Hyperf\\Notification\\ConfigProvider"
         }
     },
     "config": {

@@ -131,7 +131,7 @@ $logEvents = $events['log_events'];               // 是否记录事件日志
 namespace App\Model;
 
 use Hyperf\DbConnection\Model\Model;
-use Hyperf\Notification\Notifiable;
+use Apffth\Hyperf\Notification\Notifiable;
 
 class User extends Model
 {
@@ -148,8 +148,8 @@ class User extends Model
 
 namespace App\Notification;
 
-use Hyperf\Notification\Notification;
-use Hyperf\Notification\Messages\MailMessage;
+use Apffth\Hyperf\Notification\Notification;
+use Apffth\Hyperf\Notification\Messages\MailMessage;
 
 class WelcomeNotification extends Notification
 {
@@ -243,7 +243,7 @@ $user->deleteNotifications();
 namespace App\Model;
 
 use Hyperf\DbConnection\Model\Model;
-use Hyperf\Notification\Notifiable;
+use Apffth\Hyperf\Notification\Notifiable;
 
 class User extends Model
 {
@@ -267,7 +267,7 @@ class User extends Model
 namespace App\Model;
 
 use Hyperf\DbConnection\Model\Model;
-use Hyperf\Notification\Notifiable;
+use Apffth\Hyperf\Notification\Notifiable;
 
 class User extends Model
 {
@@ -288,7 +288,7 @@ class User extends Model
 namespace App\Model;
 
 use Hyperf\DbConnection\Model\Model;
-use Hyperf\Notification\Notifiable;
+use Apffth\Hyperf\Notification\Notifiable;
 
 class User extends Model
 {
@@ -314,9 +314,9 @@ class User extends Model
 
 namespace App\Notification;
 
-use Hyperf\Notification\Notification;
-use Hyperf\Notification\Contracts\ShouldQueue;
-use Hyperf\Notification\Queueable;
+use Apffth\Hyperf\Notification\Notification;
+use Apffth\Hyperf\Notification\Contracts\ShouldQueue;
+use Apffth\Hyperf\Notification\Queueable;
 
 class WelcomeNotification extends Notification implements ShouldQueue
 {
@@ -351,9 +351,9 @@ class WelcomeNotification extends Notification implements ShouldQueue
 
 namespace App\Notification;
 
-use Hyperf\Notification\Notification;
-use Hyperf\Notification\Contracts\ShouldQueue;
-use Hyperf\Notification\Queueable;
+use Apffth\Hyperf\Notification\Notification;
+use Apffth\Hyperf\Notification\Contracts\ShouldQueue;
+use Apffth\Hyperf\Notification\Queueable;
 
 class AdvancedNotification extends Notification implements ShouldQueue
 {
@@ -421,9 +421,9 @@ class AdvancedNotification extends Notification implements ShouldQueue
 
 namespace App\Notification;
 
-use Hyperf\Notification\Notification;
-use Hyperf\Notification\Contracts\ShouldQueue;
-use Hyperf\Notification\Queueable;
+use Apffth\Hyperf\Notification\Notification;
+use Apffth\Hyperf\Notification\Contracts\ShouldQueue;
+use Apffth\Hyperf\Notification\Queueable;
 
 class DelayedNotification extends Notification implements ShouldQueue
 {
@@ -452,9 +452,9 @@ class DelayedNotification extends Notification implements ShouldQueue
 
 namespace App\Notification;
 
-use Hyperf\Notification\Notification;
-use Hyperf\Notification\Contracts\ShouldQueue;
-use Hyperf\Notification\Queueable;
+use Apffth\Hyperf\Notification\Notification;
+use Apffth\Hyperf\Notification\Contracts\ShouldQueue;
+use Apffth\Hyperf\Notification\Queueable;
 
 class HighPriorityNotification extends Notification implements ShouldQueue
 {
@@ -628,10 +628,10 @@ Hyperf Notification 提供了完整的事件系统，让你可以在通知发送
 ```php
 <?php
 
-use Hyperf\Notification\NotificationSender;
-use Hyperf\Notification\Events\NotificationSending;
-use Hyperf\Notification\Events\NotificationSent;
-use Hyperf\Notification\Events\NotificationFailed;
+use Apffth\Hyperf\Notification\NotificationSender;
+use Apffth\Hyperf\Notification\Events\NotificationSending;
+use Apffth\Hyperf\Notification\Events\NotificationSent;
+use Apffth\Hyperf\Notification\Events\NotificationFailed;
 
 // 注册事件监听器
 NotificationSender::listen('notification.sending', function (NotificationSending $event) {
@@ -661,7 +661,7 @@ NotificationSender::listen('notification.failed', function (NotificationFailed $
 
 namespace App\Listeners;
 
-use Hyperf\Notification\Events\NotificationSending;
+use Apffth\Hyperf\Notification\Events\NotificationSending;
 use Hyperf\Logger\LoggerFactory;
 use Psr\Container\ContainerInterface;
 
@@ -844,8 +844,8 @@ NotificationSender::listen('notification.failed', function (NotificationFailed $
 
 namespace App\Channels;
 
-use Hyperf\Notification\Channels\ChannelInterface;
-use Hyperf\Notification\Notification;
+use Apffth\Hyperf\Notification\Channels\ChannelInterface;
+use Apffth\Hyperf\Notification\Notification;
 
 class SmsChannel implements ChannelInterface
 {
@@ -894,7 +894,7 @@ class SmsChannel implements ChannelInterface
 #### 方式一：注册渠道类
 
 ```php
-use Hyperf\Notification\NotificationSender;
+use Apffth\Hyperf\Notification\NotificationSender;
 use App\Channels\SmsChannel;
 
 // 注册渠道类
@@ -904,7 +904,7 @@ NotificationSender::registerChannel('sms', SmsChannel::class);
 #### 方式二：注册渠道实例
 
 ```php
-use Hyperf\Notification\NotificationSender;
+use Apffth\Hyperf\Notification\NotificationSender;
 use App\Channels\SmsChannel;
 
 // 创建渠道实例
@@ -924,7 +924,7 @@ NotificationSender::registerChannelInstance('sms', $smsChannel);
 
 namespace App\Notification;
 
-use Hyperf\Notification\Notification;
+use Apffth\Hyperf\Notification\Notification;
 
 class WelcomeNotification extends Notification
 {
@@ -970,7 +970,7 @@ class WelcomeNotification extends Notification
 namespace App\Model;
 
 use Hyperf\DbConnection\Model\Model;
-use Hyperf\Notification\Notifiable;
+use Apffth\Hyperf\Notification\Notifiable;
 
 class User extends Model
 {
@@ -1004,7 +1004,7 @@ $user->notify(new WelcomeNotification());
 你也可以直接使用 `ChannelManager` 来管理渠道：
 
 ```php
-use Hyperf\Notification\ChannelManager;
+use Apffth\Hyperf\Notification\ChannelManager;
 
 $channelManager = new ChannelManager();
 
@@ -1090,7 +1090,7 @@ namespace App\Listener;
 
 use Hyperf\Event\Annotation\Listener;
 use Hyperf\Event\Contract\ListenerInterface;
-use Hyperf\Notification\Events\NotificationSent;
+use Apffth\Hyperf\Notification\Events\NotificationSent;
 
 #[Listener]
 class NotificationSentListener implements ListenerInterface

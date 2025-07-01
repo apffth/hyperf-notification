@@ -1,8 +1,8 @@
 <?php
 
-namespace Hyperf\Notification\Events;
+namespace Apffth\Hyperf\Notification\Events;
 
-use Hyperf\Notification\Notification;
+use Apffth\Hyperf\Notification\Notification;
 use Throwable;
 
 class NotificationFailed

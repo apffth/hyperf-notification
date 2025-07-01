@@ -1,13 +1,12 @@
 <?php
 
-namespace Hyperf\Notification;
+namespace Apffth\Hyperf\Notification;
 
-use Hyperf\Notification\Contracts\ShouldQueue;
-use Hyperf\Notification\Contracts\EventDispatcherInterface;
+use Apffth\Hyperf\Notification\Contracts\EventDispatcherInterface;
 use Hyperf\AsyncQueue\Job;
-use Hyperf\Notification\Events\NotificationSending;
-use Hyperf\Notification\Events\NotificationSent;
-use Hyperf\Notification\Events\NotificationFailed;
+use Apffth\Hyperf\Notification\Events\NotificationSending;
+use Apffth\Hyperf\Notification\Events\NotificationSent;
+use Apffth\Hyperf\Notification\Events\NotificationFailed;
 use Hyperf\Stringable\Str;
 use Hyperf\Context\ApplicationContext;
 
@@ -104,13 +103,13 @@ class NotificationSender
     public static function send($notifiable, Notification $notification)
     {
         // 检查是否应该队列化
-        if ($notification instanceof ShouldQueue && $notification->shouldQueue($notifiable)) {
+        if ($notification->shouldQueue($notifiable)) {
             static::queueNotification($notifiable, $notification);
             return;
         }
 
         // 检查是否应该发送
-        if ($notification instanceof ShouldQueue && !$notification->shouldSend($notifiable)) {
+        if (! $notification->shouldSend($notifiable)) {
             return;
         }
 
@@ -152,9 +151,7 @@ class NotificationSender
                 $eventDispatcher->dispatchFailed($failedEvent);
 
                 // 处理发送失败
-                if ($notification instanceof ShouldQueue) {
-                    $notification->failed($e);
-                }
+                $notification->failed($e);
                 throw $e;
             }
         }
@@ -183,16 +180,14 @@ class NotificationSender
             {
                 try {
                     // 检查是否应该发送
-                    if ($this->notification instanceof ShouldQueue && !$this->notification->shouldSend($this->notifiable)) {
+                    if (! $this->notification->shouldSend($this->notifiable)) {
                         return;
                     }
 
                     NotificationSender::sendNow($this->notifiable, $this->notification);
                 } catch (\Throwable $e) {
                     // 处理失败
-                    if ($this->notification instanceof ShouldQueue) {
-                        $this->notification->failed($e);
-                    }
+                    $this->notification->failed($e);
                     throw $e;
                 }
             }

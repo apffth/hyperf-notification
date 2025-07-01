@@ -2,7 +2,7 @@
 
 namespace Examples\EventListeners;
 
-use Hyperf\Notification\Events\NotificationSent;
+use Apffth\Hyperf\Notification\Events\NotificationSent;
 use Hyperf\Logger\LoggerFactory;
 use Psr\Container\ContainerInterface;
 

@@ -2,10 +2,10 @@
 
 namespace Examples;
 
-use Hyperf\Notification\NotificationSender;
-use Hyperf\Notification\Events\NotificationSending;
-use Hyperf\Notification\Events\NotificationSent;
-use Hyperf\Notification\Events\NotificationFailed;
+use Apffth\Hyperf\Notification\NotificationSender;
+use Apffth\Hyperf\Notification\Events\NotificationSending;
+use Apffth\Hyperf\Notification\Events\NotificationSent;
+use Apffth\Hyperf\Notification\Events\NotificationFailed;
 use Examples\EventListeners\LogNotificationSending;
 use Examples\EventListeners\LogNotificationSent;
 use Examples\EventListeners\LogNotificationFailed;

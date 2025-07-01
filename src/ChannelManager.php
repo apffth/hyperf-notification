@@ -1,11 +1,11 @@
 <?php
 
-namespace Hyperf\Notification;
+namespace Apffth\Hyperf\Notification;
 
-use Hyperf\Notification\Channels\ChannelInterface;
-use Hyperf\Notification\Channels\MailChannel;
-use Hyperf\Notification\Channels\DatabaseChannel;
-use Hyperf\Notification\Channels\BroadcastChannel;
+use Apffth\Hyperf\Notification\Channels\ChannelInterface;
+use Apffth\Hyperf\Notification\Channels\MailChannel;
+use Apffth\Hyperf\Notification\Channels\DatabaseChannel;
+use Apffth\Hyperf\Notification\Channels\BroadcastChannel;
 use Hyperf\Context\ApplicationContext;
 
 class ChannelManager

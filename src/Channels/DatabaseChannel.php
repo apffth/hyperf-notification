@@ -1,9 +1,9 @@
 <?php
 
-namespace Hyperf\Notification\Channels;
+namespace Apffth\Hyperf\Notification\Channels;
 
-use Hyperf\Notification\Notification;
-use Hyperf\Notification\Models\Notification as NotificationModel;
+use Apffth\Hyperf\Notification\Notification;
+use Apffth\Hyperf\Notification\Models\Notification as NotificationModel;
 use Hyperf\Stringable\Str;
 
 class DatabaseChannel implements ChannelInterface

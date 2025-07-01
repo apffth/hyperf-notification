@@ -1,11 +1,13 @@
 <?php
 
-namespace Hyperf\Notification;
+namespace Apffth\Hyperf\Notification;
 
-use Hyperf\Notification\Messages\MailMessage;
+use Apffth\Hyperf\Notification\Messages\MailMessage;
 
 abstract class Notification
 {
+    use Queueable;
+
     /**
      * 获取通知的发送渠道。
      * @param mixed $notifiable

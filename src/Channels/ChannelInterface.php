@@ -1,8 +1,8 @@
 <?php
 
-namespace Hyperf\Notification\Channels;
+namespace Apffth\Hyperf\Notification\Channels;
 
-use Hyperf\Notification\Notification;
+use Apffth\Hyperf\Notification\Notification;
 
 interface ChannelInterface
 {

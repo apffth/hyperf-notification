@@ -1,10 +1,10 @@
 <?php
 
-namespace Hyperf\Notification\Contracts;
+namespace Apffth\Hyperf\Notification\Contracts;
 
-use Hyperf\Notification\Events\NotificationSending;
-use Hyperf\Notification\Events\NotificationSent;
-use Hyperf\Notification\Events\NotificationFailed;
+use Apffth\Hyperf\Notification\Events\NotificationSending;
+use Apffth\Hyperf\Notification\Events\NotificationSent;
+use Apffth\Hyperf\Notification\Events\NotificationFailed;
 
 interface EventDispatcherInterface
 {

@@ -1,15 +1,29 @@
 <?php
 
-namespace Hyperf\Notification;
+namespace Apffth\Hyperf\Notification;
 
 use function Hyperf\Config\config;
 
 /**
  * 队列化通知的 Trait
- * 参考 Laravel 11 的 Queueable trait 实现
  */
 trait Queueable
 {
+    /**
+     * 队列名称
+     */
+    protected ?string $queue = null;
+
+    /**
+     * 延迟时间（秒）
+     */
+    protected ?int $delay = null;
+
+    /**
+     * 最大重试次数
+     */
+    protected ?int $tries = null;
+
     /**
      * 获取队列名称
      */

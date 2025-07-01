@@ -1,11 +1,11 @@
 <?php
 
-namespace Hyperf\Notification;
+namespace Apffth\Hyperf\Notification;
 
-use Hyperf\Notification\Contracts\EventDispatcherInterface;
-use Hyperf\Notification\Events\NotificationSending;
-use Hyperf\Notification\Events\NotificationSent;
-use Hyperf\Notification\Events\NotificationFailed;
+use Apffth\Hyperf\Notification\Contracts\EventDispatcherInterface;
+use Apffth\Hyperf\Notification\Events\NotificationSending;
+use Apffth\Hyperf\Notification\Events\NotificationSent;
+use Apffth\Hyperf\Notification\Events\NotificationFailed;
 use Hyperf\Logger\LoggerFactory;
 use Psr\Container\ContainerInterface;
 

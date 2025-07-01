@@ -1,6 +1,6 @@
 <?php
 
-namespace Hyperf\Notification\Messages;
+namespace Apffth\Hyperf\Notification\Messages;
 
 class MailMessage
 {

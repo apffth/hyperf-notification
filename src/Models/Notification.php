@@ -1,6 +1,6 @@
 <?php
 
-namespace Hyperf\Notification\Models;
+namespace Apffth\Hyperf\Notification\Models;
 
 use Hyperf\DbConnection\Model\Model;
 use Hyperf\Database\Model\Relations\MorphTo;
