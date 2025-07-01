@@ -3,8 +3,9 @@
 namespace Hyperf\Notification\Events;
 
 use Hyperf\Notification\Notification;
+use Throwable;
 
-class NotificationSent
+class NotificationFailed
 {
     /**
      * 通知接收者
@@ -22,25 +23,25 @@ class NotificationSent
     public string $channel;
 
     /**
-     * 渠道响应结果
+     * 异常信息
      */
-    public $response;
+    public Throwable $exception;
 
     /**
-     * 发送时间
+     * 失败时间
      */
-    public \DateTimeImmutable $sentAt;
+    public \DateTimeImmutable $failedAt;
 
     /**
      * 创建新的事件实例
      */
-    public function __construct($notifiable, Notification $notification, string $channel, $response = null)
+    public function __construct($notifiable, Notification $notification, string $channel, Throwable $exception)
     {
         $this->notifiable = $notifiable;
         $this->notification = $notification;
         $this->channel = $channel;
-        $this->response = $response;
-        $this->sentAt = new \DateTimeImmutable();
+        $this->exception = $exception;
+        $this->failedAt = new \DateTimeImmutable();
     }
 
     /**
@@ -68,26 +69,34 @@ class NotificationSent
     }
 
     /**
-     * 获取渠道响应结果
+     * 获取异常信息
      */
-    public function getResponse()
+    public function getException(): Throwable
     {
-        return $this->response;
+        return $this->exception;
     }
 
     /**
-     * 获取发送时间
+     * 获取失败时间
      */
-    public function getSentAt(): \DateTimeImmutable
+    public function getFailedAt(): \DateTimeImmutable
     {
-        return $this->sentAt;
+        return $this->failedAt;
     }
 
     /**
-     * 检查是否发送成功
+     * 获取错误消息
      */
-    public function wasSuccessful(): bool
+    public function getErrorMessage(): string
     {
-        return $this->response !== false && $this->response !== null;
+        return $this->exception->getMessage();
     }
-}
+
+    /**
+     * 获取错误代码
+     */
+    public function getErrorCode(): int
+    {
+        return $this->exception->getCode();
+    }
+} 

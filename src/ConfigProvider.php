@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Hyperf\Notification;
 
+use Hyperf\Notification\Contracts\EventDispatcherInterface;
+
 class ConfigProvider
 {
     public function __invoke(): array
@@ -14,6 +16,10 @@ class ConfigProvider
             'dependencies' => [
                 // 注册渠道管理器服务
                 ChannelManager::class => ChannelManager::class,
+                
+                // 注册事件分发器服务
+                EventDispatcherInterface::class => EventDispatcher::class,
+                EventDispatcher::class => EventDispatcher::class,
             ],
             'annotations' => [
                 'scan' => [
@@ -32,6 +38,10 @@ class ConfigProvider
             ],
             'listeners' => [
                 // 可以在这里注册事件监听器
+                // 例如：
+                // \Examples\EventListeners\LogNotificationSending::class,
+                // \Examples\EventListeners\LogNotificationSent::class,
+                // \Examples\EventListeners\LogNotificationFailed::class,
             ],
         ];
     }

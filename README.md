@@ -78,8 +78,11 @@ NOTIFICATION_QUEUE_RETRY_AFTER=10
 NOTIFICATION_QUEUE_PRIORITY=0
 
 # 事件配置
+NOTIFICATION_EVENTS_ENABLED=true
 NOTIFICATION_ENABLE_SENDING_EVENT=true
 NOTIFICATION_ENABLE_SENT_EVENT=true
+NOTIFICATION_ENABLE_FAILED_EVENT=true
+NOTIFICATION_LOG_EVENTS=true
 
 # 邮件配置
 MAIL_MAILER=smtp
@@ -111,8 +114,11 @@ $retryAfter = $queueConfig['retry_after']; // 重试间隔
 $priority = $queueConfig['priority'];     // 优先级
 
 // 事件配置
+$enabled = $events['enabled'];                    // 是否启用事件系统
 $enableSending = $events['enable_sending_event']; // 是否启用发送前事件
 $enableSent = $events['enable_sent_event'];       // 是否启用发送后事件
+$enableFailed = $events['enable_failed_event'];   // 是否启用失败事件
+$logEvents = $events['log_events'];               // 是否记录事件日志
 ```
 
 ## 使用方法
@@ -604,6 +610,226 @@ php bin/hyperf.php process:start AsyncQueueConsumer --queue=notifications --proc
 3. **提高性能**：避免阻塞主线程
 4. **支持高并发**：大量通知可以排队处理
 5. **灵活配置**：支持延迟、重试、超时等配置
+
+## 事件系统
+
+Hyperf Notification 提供了完整的事件系统，让你可以在通知发送的不同阶段执行自定义逻辑。
+
+### 事件类型
+
+系统提供以下三种事件：
+
+1. **NotificationSending** - 通知发送前事件
+2. **NotificationSent** - 通知发送后事件  
+3. **NotificationFailed** - 通知失败事件
+
+### 基础事件监听
+
+```php
+<?php
+
+use Hyperf\Notification\NotificationSender;
+use Hyperf\Notification\Events\NotificationSending;
+use Hyperf\Notification\Events\NotificationSent;
+use Hyperf\Notification\Events\NotificationFailed;
+
+// 注册事件监听器
+NotificationSender::listen('notification.sending', function (NotificationSending $event) {
+    echo "通知发送前: {$event->getChannel()}\n";
+    
+    // 可以阻止发送
+    if ($event->getChannel() === 'mail' && $this->isMaintenanceMode()) {
+        $event->preventSending();
+    }
+});
+
+NotificationSender::listen('notification.sent', function (NotificationSent $event) {
+    echo "通知发送后: {$event->getChannel()}\n";
+    echo "发送成功: " . ($event->wasSuccessful() ? '是' : '否') . "\n";
+});
+
+NotificationSender::listen('notification.failed', function (NotificationFailed $event) {
+    echo "通知失败: {$event->getChannel()}\n";
+    echo "错误信息: " . $event->getErrorMessage() . "\n";
+});
+```
+
+### 基于类的事件监听器
+
+```php
+<?php
+
+namespace App\Listeners;
+
+use Hyperf\Notification\Events\NotificationSending;
+use Hyperf\Logger\LoggerFactory;
+use Psr\Container\ContainerInterface;
+
+class LogNotificationSending
+{
+    protected $logger;
+
+    public function __construct(ContainerInterface $container)
+    {
+        $this->logger = $container->get(LoggerFactory::class)->get('notification');
+    }
+
+    public function handle(NotificationSending $event): void
+    {
+        $this->logger->info('Notification sending', [
+            'notifiable' => $this->getNotifiableInfo($event->getNotifiable()),
+            'notification' => get_class($event->getNotification()),
+            'channel' => $event->getChannel(),
+        ]);
+    }
+
+    protected function getNotifiableInfo($notifiable): array
+    {
+        if (is_object($notifiable)) {
+            return [
+                'type' => get_class($notifiable),
+                'id' => method_exists($notifiable, 'getKey') ? $notifiable->getKey() : null,
+            ];
+        }
+
+        return [
+            'type' => gettype($notifiable),
+            'value' => is_scalar($notifiable) ? $notifiable : null,
+        ];
+    }
+}
+```
+
+### 条件发送控制
+
+```php
+<?php
+
+NotificationSender::listen('notification.sending', function (NotificationSending $event) {
+    $notifiable = $event->getNotifiable();
+    $notification = $event->getNotification();
+    
+    // 只在工作时间发送邮件
+    if ($event->getChannel() === 'mail' && !$this->isWorkingHours()) {
+        $event->preventSending();
+    }
+    
+    // 检查用户是否允许接收通知
+    if (method_exists($notifiable, 'shouldReceiveNotifications') && !$notifiable->shouldReceiveNotifications()) {
+        $event->preventSending();
+    }
+    
+    // 检查通知频率限制
+    if ($this->isRateLimited($notifiable, $notification)) {
+        $event->preventSending();
+    }
+});
+```
+
+### 发送后操作
+
+```php
+<?php
+
+NotificationSender::listen('notification.sent', function (NotificationSent $event) {
+    if ($event->wasSuccessful()) {
+        // 更新用户通知统计
+        $notifiable = $event->getNotifiable();
+        if (method_exists($notifiable, 'incrementNotificationCount')) {
+            $notifiable->incrementNotificationCount();
+        }
+        
+        // 发送到外部系统
+        $this->sendToExternalSystem($event);
+        
+        // 记录通知历史
+        $this->logNotificationHistory($event);
+    }
+});
+```
+
+### 失败处理
+
+```php
+<?php
+
+NotificationSender::listen('notification.failed', function (NotificationFailed $event) {
+    // 记录失败日志
+    $this->logFailure($event);
+    
+    // 发送告警
+    $this->sendAlert($event);
+    
+    // 重试逻辑
+    $this->handleRetry($event);
+});
+```
+
+### 事件配置
+
+在 `config/notification.php` 中配置事件：
+
+```php
+'events' => [
+    // 是否启用事件系统
+    'enabled' => env('NOTIFICATION_EVENTS_ENABLED', true),
+    
+    // 是否启用发送前事件
+    'enable_sending_event' => env('NOTIFICATION_ENABLE_SENDING_EVENT', true),
+    
+    // 是否启用发送后事件
+    'enable_sent_event' => env('NOTIFICATION_ENABLE_SENT_EVENT', true),
+    
+    // 是否启用失败事件
+    'enable_failed_event' => env('NOTIFICATION_ENABLE_FAILED_EVENT', true),
+    
+    // 是否记录事件日志
+    'log_events' => env('NOTIFICATION_LOG_EVENTS', true),
+    
+    // 事件监听器配置
+    'listeners' => [
+        // 可以在这里配置全局事件监听器
+        // 'notification.sending' => [
+        //     \App\Listeners\LogNotificationSending::class,
+        // ],
+        // 'notification.sent' => [
+        //     \App\Listeners\LogNotificationSent::class,
+        // ],
+        // 'notification.failed' => [
+        //     \App\Listeners\LogNotificationFailed::class,
+        // ],
+    ],
+],
+```
+
+### 事件属性
+
+#### NotificationSending 事件
+
+- `getNotifiable()` - 获取通知接收者
+- `getNotification()` - 获取通知实例
+- `getChannel()` - 获取通知渠道
+- `preventSending()` - 阻止发送
+- `shouldSend()` - 检查是否应该发送
+
+#### NotificationSent 事件
+
+- `getNotifiable()` - 获取通知接收者
+- `getNotification()` - 获取通知实例
+- `getChannel()` - 获取通知渠道
+- `getResponse()` - 获取渠道响应结果
+- `getSentAt()` - 获取发送时间
+- `wasSuccessful()` - 检查是否发送成功
+
+#### NotificationFailed 事件
+
+- `getNotifiable()` - 获取通知接收者
+- `getNotification()` - 获取通知实例
+- `getChannel()` - 获取通知渠道
+- `getException()` - 获取异常信息
+- `getFailedAt()` - 获取失败时间
+- `getErrorMessage()` - 获取错误消息
+- `getErrorCode()` - 获取错误代码
 
 ### 7. 自定义通知渠道
 

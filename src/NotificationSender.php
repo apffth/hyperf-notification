@@ -3,10 +3,13 @@
 namespace Hyperf\Notification;
 
 use Hyperf\Notification\Contracts\ShouldQueue;
+use Hyperf\Notification\Contracts\EventDispatcherInterface;
 use Hyperf\AsyncQueue\Job;
 use Hyperf\Notification\Events\NotificationSending;
 use Hyperf\Notification\Events\NotificationSent;
+use Hyperf\Notification\Events\NotificationFailed;
 use Hyperf\Stringable\Str;
+use Hyperf\Context\ApplicationContext;
 
 use function Hyperf\AsyncQueue\dispatch;
 
@@ -16,6 +19,11 @@ class NotificationSender
      * 渠道管理器实例
      */
     protected static ?ChannelManager $channelManager = null;
+
+    /**
+     * 事件分发器实例
+     */
+    protected static ?EventDispatcherInterface $eventDispatcher = null;
 
     /**
      * 获取渠道管理器
@@ -29,11 +37,37 @@ class NotificationSender
     }
 
     /**
+     * 获取事件分发器
+     */
+    protected static function getEventDispatcher(): EventDispatcherInterface
+    {
+        if (static::$eventDispatcher === null) {
+            $container = ApplicationContext::getContainer();
+            $config = $container->get('config');
+            $eventsConfig = $config->get('notification.events', []);
+            
+            static::$eventDispatcher = new EventDispatcher(
+                $container,
+                $eventsConfig['enabled'] ?? true
+            );
+        }
+        return static::$eventDispatcher;
+    }
+
+    /**
      * 设置渠道管理器
      */
     public static function setChannelManager(ChannelManager $manager): void
     {
         static::$channelManager = $manager;
+    }
+
+    /**
+     * 设置事件分发器
+     */
+    public static function setEventDispatcher(EventDispatcherInterface $dispatcher): void
+    {
+        static::$eventDispatcher = $dispatcher;
     }
 
     /**
@@ -50,6 +84,14 @@ class NotificationSender
     public static function registerChannelInstance(string $name, $channel): void
     {
         static::getChannelManager()->registerInstance($name, $channel);
+    }
+
+    /**
+     * 添加事件监听器
+     */
+    public static function listen(string $event, callable $listener): void
+    {
+        static::getEventDispatcher()->listen($event, $listener);
     }
 
     /**
@@ -85,28 +127,30 @@ class NotificationSender
     public static function sendNow($notifiable, Notification $notification)
     {
         $channels = $notification->via($notifiable);
+        $eventDispatcher = static::getEventDispatcher();
 
         foreach ($channels as $channel) {
             // 触发发送前事件
             $sendingEvent = new NotificationSending($notifiable, $notification, $channel);
-            // 这里可以添加事件分发逻辑
+            $eventDispatcher->dispatchSending($sendingEvent);
 
             // 检查是否应该发送（通过事件监听器）
-            $shouldSend = true;
-            // 这里可以添加事件监听器逻辑来检查是否应该发送
-
-            if (!$shouldSend) {
+            if (!$sendingEvent->shouldSend()) {
                 continue;
             }
 
             try {
                 $channelInstance = static::getChannelManager()->get($channel);
-                $channelInstance->send($notifiable, $notification);
+                $response = $channelInstance->send($notifiable, $notification);
 
                 // 触发发送后事件
-                $sentEvent = new NotificationSent($notifiable, $notification, $channel);
-                // 这里可以添加事件分发逻辑
+                $sentEvent = new NotificationSent($notifiable, $notification, $channel, $response);
+                $eventDispatcher->dispatchSent($sentEvent);
             } catch (\Throwable $e) {
+                // 触发失败事件
+                $failedEvent = new NotificationFailed($notifiable, $notification, $channel, $e);
+                $eventDispatcher->dispatchFailed($failedEvent);
+
                 // 处理发送失败
                 if ($notification instanceof ShouldQueue) {
                     $notification->failed($e);
@@ -155,6 +199,6 @@ class NotificationSender
         };
 
         // 推送到队列
-        dispatch($job, $notification->getDelay(), $notification->getTries(), $notification->getQueueName());
+        dispatch($job, $notification->getDelay() ?? 0, $notification->getTries() ?? 3, $notification->getQueueName() ?? 'notification');
     }
 }
