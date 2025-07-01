@@ -2,13 +2,13 @@
 
 namespace Hyperf\Notification;
 
-use Hyperf\Notification\Channels\MailChannel;
-use Hyperf\Notification\Channels\DatabaseChannel;
-use Hyperf\Notification\Channels\BroadcastChannel;
 use Hyperf\Notification\Contracts\ShouldQueue;
 use Hyperf\AsyncQueue\Job;
-use Hyperf\Context\ApplicationContext;
-use Hyperf\AsyncQueue\Driver\DriverFactory;
+use Hyperf\Notification\Events\NotificationSending;
+use Hyperf\Notification\Events\NotificationSent;
+use Hyperf\Stringable\Str;
+
+use function Hyperf\AsyncQueue\dispatch;
 
 class NotificationSender
 {
@@ -54,6 +54,7 @@ class NotificationSender
 
     /**
      * 发送通知到指定 notifiable。
+     * 参考 Laravel 11 的 send 方法实现
      * @param mixed $notifiable
      * @param Notification $notification
      * @return void
@@ -75,24 +76,61 @@ class NotificationSender
     }
 
     /**
+     * 立即发送通知
+     * 参考 Laravel 11 的 sendNow 方法
+     * @param mixed $notifiable
+     * @param Notification $notification
+     * @return void
+     */
+    public static function sendNow($notifiable, Notification $notification)
+    {
+        $channels = $notification->via($notifiable);
+
+        foreach ($channels as $channel) {
+            // 触发发送前事件
+            $sendingEvent = new NotificationSending($notifiable, $notification, $channel);
+            // 这里可以添加事件分发逻辑
+
+            // 检查是否应该发送（通过事件监听器）
+            $shouldSend = true;
+            // 这里可以添加事件监听器逻辑来检查是否应该发送
+
+            if (!$shouldSend) {
+                continue;
+            }
+
+            try {
+                $channelInstance = static::getChannelManager()->get($channel);
+                $channelInstance->send($notifiable, $notification);
+
+                // 触发发送后事件
+                $sentEvent = new NotificationSent($notifiable, $notification, $channel);
+                // 这里可以添加事件分发逻辑
+            } catch (\Throwable $e) {
+                // 处理发送失败
+                if ($notification instanceof ShouldQueue) {
+                    $notification->failed($e);
+                }
+                throw $e;
+            }
+        }
+    }
+
+    /**
      * 将通知推送到队列
+     * 参考 Laravel 11 的队列化实现
      */
     protected static function queueNotification($notifiable, Notification $notification): void
     {
-        $container = ApplicationContext::getContainer();
-        $driverFactory = $container->get(DriverFactory::class);
-
-        // 获取队列名称
-        $queueName = $notification->queue ?? 'default';
-        $driver = $driverFactory->get($queueName);
-
         // 创建队列任务
         $job = new class ($notifiable, $notification) extends Job {
+            private string $uniqid;
             protected $notifiable;
             protected $notification;
 
             public function __construct($notifiable, $notification)
             {
+                $this->uniqid = Str::uuid()->toString();
                 $this->notifiable = $notifiable;
                 $this->notification = $notification;
             }
@@ -117,39 +155,6 @@ class NotificationSender
         };
 
         // 推送到队列
-        $driver->push($job);
-    }
-
-    /**
-     * 立即发送通知
-     */
-    public static function sendNow($notifiable, Notification $notification)
-    {
-        $channels = (array) $notification->via($notifiable);
-        $channelManager = static::getChannelManager();
-
-        foreach ($channels as $channel) {
-            // 首先尝试从渠道管理器获取
-            $channelInstance = $channelManager->get($channel);
-
-            if ($channelInstance !== null) {
-                $channelInstance->send($notifiable, $notification);
-                continue;
-            }
-
-            // 如果渠道管理器中没有，尝试使用旧的方式
-            $method = 'sendVia' . ucfirst($channel);
-            if (method_exists(static::class, $method)) {
-                static::{$method}($notifiable, $notification);
-            } else {
-                // 尝试自动加载渠道类
-                $channelClass = __NAMESPACE__ . '\\Channels\\' . ucfirst($channel) . 'Channel';
-                if (class_exists($channelClass)) {
-                    (new $channelClass())->send($notifiable, $notification);
-                } else {
-                    throw new \InvalidArgumentException("Channel '{$channel}' not found.");
-                }
-            }
-        }
+        dispatch($job, $notification->getDelay(), $notification->getTries(), $notification->getQueueName());
     }
 }

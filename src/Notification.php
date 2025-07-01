@@ -3,7 +3,6 @@
 namespace Hyperf\Notification;
 
 use Hyperf\Notification\Messages\MailMessage;
-use Hyperf\Notification\Messages\DatabaseMessage;
 
 abstract class Notification
 {

@@ -69,6 +69,18 @@ php bin/hyperf.php migrate
 NOTIFICATION_DEFAULT_CHANNEL=mail
 NOTIFICATION_QUEUE=notifications
 
+# 队列配置
+NOTIFICATION_QUEUE_CONNECTION=default
+NOTIFICATION_QUEUE_DELAY=0
+NOTIFICATION_QUEUE_TRIES=3
+NOTIFICATION_QUEUE_TIMEOUT=30
+NOTIFICATION_QUEUE_RETRY_AFTER=10
+NOTIFICATION_QUEUE_PRIORITY=0
+
+# 事件配置
+NOTIFICATION_ENABLE_SENDING_EVENT=true
+NOTIFICATION_ENABLE_SENT_EVENT=true
+
 # 邮件配置
 MAIL_MAILER=smtp
 MAIL_HOST=smtp.mailtrap.io
@@ -78,6 +90,29 @@ MAIL_PASSWORD=your_password
 MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS="hello@example.com"
 MAIL_FROM_NAME="${APP_NAME}"
+```
+
+### 4. 配置文件说明
+
+配置文件 `config/notification.php` 包含以下配置项：
+
+```php
+// 获取配置示例
+$queueConfig = config('notification.queue');
+$events = config('notification.events');
+
+// 队列配置
+$connection = $queueConfig['connection']; // 队列连接
+$queue = $queueConfig['queue'];           // 队列名称
+$delay = $queueConfig['delay'];           // 延迟时间
+$tries = $queueConfig['tries'];           // 重试次数
+$timeout = $queueConfig['timeout'];       // 超时时间
+$retryAfter = $queueConfig['retry_after']; // 重试间隔
+$priority = $queueConfig['priority'];     // 优先级
+
+// 事件配置
+$enableSending = $events['enable_sending_event']; // 是否启用发送前事件
+$enableSent = $events['enable_sent_event'];       // 是否启用发送后事件
 ```
 
 ## 使用方法
@@ -264,7 +299,7 @@ class User extends Model
 
 ### 6. 队列化通知
 
-参考 [Laravel 的队列化通知](https://laravel.com/docs/10.x/notifications#queueing-notifications)，Hyperf Notification 支持通过队列异步发送通知，提高应用性能。
+参考 [Laravel 11 的队列化通知](https://laravel.com/docs/11.x/notifications#queueing-notifications)，Hyperf Notification 支持通过队列异步发送通知，提高应用性能。
 
 #### 基础队列化通知
 
@@ -318,12 +353,14 @@ class AdvancedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    // 队列配置
-    public $queue = 'notifications'; // 指定队列名称
-    public $delay = 60; // 延迟60秒执行
-    public $tries = 3; // 最大重试次数
-    public $timeout = 30; // 超时时间（秒）
-    public $retryAfter = 10; // 重试间隔（秒）
+    // 队列配置 - 在子类中定义这些属性
+    public ?string $queue = 'notifications'; // 指定队列名称
+    public ?int $delay = 60; // 延迟60秒执行
+    public ?int $tries = 3; // 最大重试次数
+    public ?int $timeout = 30; // 超时时间（秒）
+    public ?int $retryAfter = 10; // 重试间隔（秒）
+    public ?string $connection = 'default'; // 队列连接
+    public ?int $priority = 0; // 队列优先级
 
     public function via($notifiable)
     {
@@ -459,7 +496,36 @@ class UserController
         // 立即返回响应，通知在后台处理
         return '注册成功！通知将在后台发送。';
     }
+
+    public function sendAdvancedNotification()
+    {
+        $user = User::find(1);
+        
+        // 使用 Laravel 11 风格的链式调用
+        $notification = new WelcomeNotification();
+        $notification->onQueue('urgent')
+                    ->delay(0)
+                    ->tries(5)
+                    ->timeout(60)
+                    ->retryAfter(30)
+                    ->onConnection('redis')
+                    ->priority(10);
+        
+        $user->notify($notification);
+    }
 }
+
+#### Laravel 11 兼容特性
+
+Hyperf Notification 完全兼容 Laravel 11 的队列化通知 API：
+
+- ✅ **ShouldQueue 接口**: 实现此接口使通知自动队列化
+- ✅ **Queueable trait**: 提供队列配置方法
+- ✅ **链式调用**: 支持 `onQueue()`, `delay()`, `tries()`, `timeout()`, `retryAfter()`, `onConnection()`, `priority()` 等方法
+- ✅ **失败处理**: `failed()` 方法处理发送失败
+- ✅ **条件队列化**: `shouldQueue()` 方法控制是否队列化
+- ✅ **条件发送**: `shouldSend()` 方法控制是否发送
+- ✅ **事件系统**: 支持 `NotificationSending` 和 `NotificationSent` 事件
 ```
 
 #### 配置队列系统
