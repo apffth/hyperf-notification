@@ -264,7 +264,9 @@ class User extends Model
 
 ### 6. 队列化通知
 
-如果通知需要队列化处理，实现 `ShouldQueue` 接口：
+参考 [Laravel 的队列化通知](https://laravel.com/docs/10.x/notifications#queueing-notifications)，Hyperf Notification 支持通过队列异步发送通知，提高应用性能。
+
+#### 基础队列化通知
 
 ```php
 <?php
@@ -273,9 +275,119 @@ namespace App\Notification;
 
 use Hyperf\Notification\Notification;
 use Hyperf\Notification\Contracts\ShouldQueue;
+use Hyperf\Notification\Queueable;
 
-class QueueableNotification extends Notification implements ShouldQueue
+class WelcomeNotification extends Notification implements ShouldQueue
 {
+    use Queueable;
+
+    public function via($notifiable)
+    {
+        return ['mail', 'database'];
+    }
+
+    public function toMail($notifiable)
+    {
+        return (new MailMessage)
+            ->subject('欢迎加入我们！')
+            ->line('感谢您注册我们的应用。');
+    }
+
+    public function toDatabase($notifiable)
+    {
+        return [
+            'title' => '欢迎加入我们！',
+            'message' => '感谢您注册我们的应用。',
+        ];
+    }
+}
+```
+
+#### 高级队列化通知
+
+```php
+<?php
+
+namespace App\Notification;
+
+use Hyperf\Notification\Notification;
+use Hyperf\Notification\Contracts\ShouldQueue;
+use Hyperf\Notification\Queueable;
+
+class AdvancedNotification extends Notification implements ShouldQueue
+{
+    use Queueable;
+
+    // 队列配置
+    public $queue = 'notifications'; // 指定队列名称
+    public $delay = 60; // 延迟60秒执行
+    public $tries = 3; // 最大重试次数
+    public $timeout = 30; // 超时时间（秒）
+    public $retryAfter = 10; // 重试间隔（秒）
+
+    public function via($notifiable)
+    {
+        return ['mail', 'sms'];
+    }
+
+    public function toMail($notifiable)
+    {
+        return (new MailMessage)
+            ->subject('高级通知')
+            ->line('这是一个高级队列化通知。');
+    }
+
+    public function toSms($notifiable)
+    {
+        return [
+            'content' => "你好 {$notifiable->name}，这是一个高级通知。",
+            'template' => 'SMS_ADVANCED',
+        ];
+    }
+
+    // 自定义失败处理
+    public function failed(\Throwable $exception): void
+    {
+        // 记录失败日志
+        logger()->error('通知发送失败', [
+            'notification' => get_class($this),
+            'exception' => $exception->getMessage(),
+        ]);
+    }
+
+    // 条件队列化
+    public function shouldQueue($notifiable): bool
+    {
+        // 只在特定条件下队列化
+        return $notifiable->email && !$notifiable->is_test_user;
+    }
+
+    // 条件发送
+    public function shouldSend($notifiable): bool
+    {
+        // 只在特定条件下发送
+        return $notifiable->email_verified_at !== null;
+    }
+}
+```
+
+#### 延迟通知
+
+```php
+<?php
+
+namespace App\Notification;
+
+use Hyperf\Notification\Notification;
+use Hyperf\Notification\Contracts\ShouldQueue;
+use Hyperf\Notification\Queueable;
+
+class DelayedNotification extends Notification implements ShouldQueue
+{
+    use Queueable;
+
+    public $delay = 300; // 延迟5分钟
+
     public function via($notifiable)
     {
         return ['mail'];
@@ -284,13 +396,150 @@ class QueueableNotification extends Notification implements ShouldQueue
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject('队列化通知')
-            ->line('这是一个队列化的通知。');
+            ->subject('延迟通知')
+            ->line('这是一个延迟发送的通知。');
     }
 }
 ```
 
-## 自定义通知渠道
+#### 高优先级通知
+
+```php
+<?php
+
+namespace App\Notification;
+
+use Hyperf\Notification\Notification;
+use Hyperf\Notification\Contracts\ShouldQueue;
+use Hyperf\Notification\Queueable;
+
+class HighPriorityNotification extends Notification implements ShouldQueue
+{
+    use Queueable;
+
+    public $queue = 'high-priority'; // 使用高优先级队列
+
+    public function via($notifiable)
+    {
+        return ['mail', 'sms'];
+    }
+
+    public function toMail($notifiable)
+    {
+        return (new MailMessage)
+            ->subject('高优先级通知')
+            ->line('这是一个高优先级通知。');
+    }
+}
+```
+
+#### 发送队列化通知
+
+```php
+<?php
+
+namespace App\Controller;
+
+use App\Model\User;
+use App\Notification\WelcomeNotification;
+
+class UserController
+{
+    public function register()
+    {
+        // 创建用户
+        $user = User::create([
+            'name' => '张三',
+            'email' => 'zhangsan@example.com',
+        ]);
+
+        // 发送队列化通知（异步）
+        $user->notify(new WelcomeNotification());
+
+        // 立即返回响应，通知在后台处理
+        return '注册成功！通知将在后台发送。';
+    }
+}
+```
+
+#### 配置队列系统
+
+在 `config/autoload/async_queue.php` 中配置队列：
+
+```php
+<?php
+
+return [
+    'default' => [
+        'driver' => 'redis',
+        'redis' => [
+            'pool' => 'default',
+        ],
+        'channel' => 'queue',
+        'timeout' => 2,
+        'retry_seconds' => 5,
+        'handle_timeout' => 10,
+        'processes' => 1,
+        'concurrent' => [
+            'limit' => 10,
+        ],
+    ],
+    'notifications' => [
+        'driver' => 'redis',
+        'redis' => [
+            'pool' => 'default',
+        ],
+        'channel' => 'notifications',
+        'timeout' => 5,
+        'retry_seconds' => 10,
+        'handle_timeout' => 30,
+        'processes' => 2,
+        'concurrent' => [
+            'limit' => 5,
+        ],
+    ],
+    'high-priority' => [
+        'driver' => 'redis',
+        'redis' => [
+            'pool' => 'default',
+        ],
+        'channel' => 'high-priority',
+        'timeout' => 2,
+        'retry_seconds' => 3,
+        'handle_timeout' => 15,
+        'processes' => 1,
+        'concurrent' => [
+            'limit' => 3,
+        ],
+    ],
+];
+```
+
+#### 启动队列处理器
+
+```bash
+# 启动默认队列处理器
+php bin/hyperf.php process:start AsyncQueueConsumer
+
+# 启动通知专用队列处理器
+php bin/hyperf.php process:start AsyncQueueConsumer --queue=notifications
+
+# 启动高优先级队列处理器
+php bin/hyperf.php process:start AsyncQueueConsumer --queue=high-priority
+
+# 启动多个处理器
+php bin/hyperf.php process:start AsyncQueueConsumer --queue=notifications --processes=2
+```
+
+#### 队列化通知的优势
+
+1. **提高响应速度**：用户请求立即返回，不需要等待通知发送完成
+2. **提高可靠性**：失败的通知可以重试
+3. **提高性能**：避免阻塞主线程
+4. **支持高并发**：大量通知可以排队处理
+5. **灵活配置**：支持延迟、重试、超时等配置
+
+### 7. 自定义通知渠道
 
 系统支持注册自定义通知渠道，让你可以轻松扩展通知功能。
 

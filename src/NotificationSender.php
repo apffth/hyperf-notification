@@ -60,31 +60,69 @@ class NotificationSender
      */
     public static function send($notifiable, Notification $notification)
     {
-        if ($notification instanceof ShouldQueue) {
-            // 推送到队列
-            $container = ApplicationContext::getContainer();
-            $driverFactory = $container->get(DriverFactory::class);
-            $driver = $driverFactory->get('default');
-
-            $job = new class ($notifiable, $notification) extends Job {
-                protected $notifiable;
-                protected $notification;
-                public function __construct($notifiable, $notification)
-                {
-                    $this->notifiable = $notifiable;
-                    $this->notification = $notification;
-                }
-                public function handle()
-                {
-                    NotificationSender::sendNow($this->notifiable, $this->notification);
-                }
-            };
-            $driver->push($job);
+        // 检查是否应该队列化
+        if ($notification instanceof ShouldQueue && $notification->shouldQueue($notifiable)) {
+            static::queueNotification($notifiable, $notification);
             return;
         }
+
+        // 检查是否应该发送
+        if ($notification instanceof ShouldQueue && !$notification->shouldSend($notifiable)) {
+            return;
+        }
+
         static::sendNow($notifiable, $notification);
     }
 
+    /**
+     * 将通知推送到队列
+     */
+    protected static function queueNotification($notifiable, Notification $notification): void
+    {
+        $container = ApplicationContext::getContainer();
+        $driverFactory = $container->get(DriverFactory::class);
+
+        // 获取队列名称
+        $queueName = $notification->queue ?? 'default';
+        $driver = $driverFactory->get($queueName);
+
+        // 创建队列任务
+        $job = new class ($notifiable, $notification) extends Job {
+            protected $notifiable;
+            protected $notification;
+
+            public function __construct($notifiable, $notification)
+            {
+                $this->notifiable = $notifiable;
+                $this->notification = $notification;
+            }
+
+            public function handle(): void
+            {
+                try {
+                    // 检查是否应该发送
+                    if ($this->notification instanceof ShouldQueue && !$this->notification->shouldSend($this->notifiable)) {
+                        return;
+                    }
+
+                    NotificationSender::sendNow($this->notifiable, $this->notification);
+                } catch (\Throwable $e) {
+                    // 处理失败
+                    if ($this->notification instanceof ShouldQueue) {
+                        $this->notification->failed($e);
+                    }
+                    throw $e;
+                }
+            }
+        };
+
+        // 推送到队列
+        $driver->push($job);
+    }
+
+    /**
+     * 立即发送通知
+     */
     public static function sendNow($notifiable, Notification $notification)
     {
         $channels = (array) $notification->via($notifiable);
