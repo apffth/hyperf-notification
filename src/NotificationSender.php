@@ -8,8 +8,10 @@ use Apffth\Hyperf\Notification\Contracts\EventDispatcherInterface;
 use Apffth\Hyperf\Notification\Events\NotificationFailed;
 use Apffth\Hyperf\Notification\Events\NotificationSending;
 use Apffth\Hyperf\Notification\Events\NotificationSent;
+use Hyperf\AsyncQueue\Driver\DriverFactory;
 use Hyperf\AsyncQueue\Job;
 use Hyperf\Context\ApplicationContext;
+use Hyperf\Logger\LoggerFactory;
 use Hyperf\Stringable\Str;
 use Throwable;
 
@@ -197,6 +199,27 @@ class NotificationSender
         };
 
         // 推送到队列
-        dispatch($job, $notification->getDelay() ?? 0, $notification->getTries() ?? 3, $notification->getQueueName() ?? 'notification');
+        // dispatch($job, $notification->getDelay() ?? 0, $notification->getTries() ?? 3, $notification->getQueueName() ?? 'notification');
+
+        $logger = ApplicationContext::getContainer()->get(LoggerFactory::class)->get('hyperf', 'default');
+        $logger->info('queueNotification', [
+            'notifiable' => $notifiable->id,
+            'delay'      => $notification->getDelay(),
+            'tries'      => $notification->getTries(),
+            'queue'      => $notification->getQueueName(),
+            'driver'     => ApplicationContext::getContainer()->get(DriverFactory::class),
+            'queue'      => ApplicationContext::getContainer()
+                ->get(DriverFactory::class)
+                ->get($notification->getQueueName() ?? 'notification'),
+        ]);
+
+        if (is_int($notification->getTries())) {
+            $job->setMaxAttempts($notification->getTries());
+        }
+
+        ApplicationContext::getContainer()
+            ->get(DriverFactory::class)
+            ->get($notification->getQueueName() ?? 'notification')
+            ->push($job, $notification->getDelay() ?? 0);
     }
 }
