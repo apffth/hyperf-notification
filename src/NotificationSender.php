@@ -125,10 +125,10 @@ class NotificationSender
         // 创建队列任务
         $job = new class ($notifiable, $notification) extends Job {
             private string $uniqid;
-            protected $notifiable;
-            protected $notification;
+            protected mixed $notifiable;
+            protected Notification $notification;
 
-            public function __construct($notifiable, $notification)
+            public function __construct(mixed $notifiable, Notification $notification)
             {
                 $this->uniqid = Str::uuid()->toString();
                 $this->notifiable = $notifiable;

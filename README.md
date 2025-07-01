@@ -1,6 +1,6 @@
 # Hyperf Notification
 
-一个与 Laravel Notifications 完全兼容的 Hyperf 通知系统。
+参考 Laravel Notifications 实现的 Hyperf 通知系统。
 
 ## 功能特性
 
