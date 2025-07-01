@@ -8,14 +8,11 @@ use Apffth\Hyperf\Notification\Contracts\EventDispatcherInterface;
 use Apffth\Hyperf\Notification\Events\NotificationFailed;
 use Apffth\Hyperf\Notification\Events\NotificationSending;
 use Apffth\Hyperf\Notification\Events\NotificationSent;
-use Hyperf\AsyncQueue\Driver\DriverFactory;
-use Hyperf\AsyncQueue\Job;
 use Hyperf\Context\ApplicationContext;
-use Hyperf\Logger\LoggerFactory;
-use Hyperf\Stringable\Str;
 use Throwable;
 
 use function Hyperf\AsyncQueue\dispatch;
+use function Hyperf\Config\config;
 
 class NotificationSender
 {
@@ -148,8 +145,7 @@ class NotificationSender
     {
         if (static::$eventDispatcher === null) {
             $container    = ApplicationContext::getContainer();
-            $config       = $container->get('config');
-            $eventsConfig = $config->get('notification.events', []);
+            $eventsConfig = config('notification.events', []);
 
             static::$eventDispatcher = new EventDispatcher(
                 $container,
@@ -166,62 +162,13 @@ class NotificationSender
      */
     protected static function queueNotification($notifiable, Notification $notification): void
     {
-        // 创建队列任务
-        // $job = new class($notifiable, $notification) extends Job {
-        //     private string $uniqid;
-
-        //     protected mixed $notifiable;
-
-        //     protected Notification $notification;
-
-        //     public function __construct(mixed $notifiable, Notification $notification)
-        //     {
-        //         $this->uniqid       = Str::uuid()->toString();
-        //         $this->notifiable   = $notifiable;
-        //         $this->notification = $notification;
-        //     }
-
-        //     public function handle(): void
-        //     {
-        //         try {
-        //             // 检查是否应该发送
-        //             if (! $this->notification->shouldSend($this->notifiable)) {
-        //                 return;
-        //             }
-
-        //             NotificationSender::sendNow($this->notifiable, $this->notification);
-        //         } catch (Throwable $e) {
-        //             // 处理失败
-        //             $this->notification->failed($e);
-        //             throw $e;
-        //         }
-        //     }
-        // };
-
         $job = new NotificationJob($notifiable, $notification);
 
-        // 推送到队列
-        // dispatch($job, $notification->getDelay() ?? 0, $notification->getTries() ?? 3, $notification->getQueueName() ?? 'notification');
-
-        $logger = ApplicationContext::getContainer()->get(LoggerFactory::class)->get('hyperf', 'default');
-        $logger->info('queueNotification', [
-            'notifiable' => $notifiable->id,
-            'delay'      => $notification->getDelay(),
-            'tries'      => $notification->getTries(),
-            'queue'      => $notification->getQueueName(),
-            'driver'     => ApplicationContext::getContainer()->get(DriverFactory::class),
-            'queue'      => ApplicationContext::getContainer()
-                ->get(DriverFactory::class)
-                ->get($notification->getQueueName() ?? 'notification'),
-        ]);
-
-        if (is_int($notification->getTries())) {
-            $job->setMaxAttempts($notification->getTries());
-        }
-
-        ApplicationContext::getContainer()
-            ->get(DriverFactory::class)
-            ->get($notification->getQueueName() ?? 'notification')
-            ->push($job, $notification->getDelay() ?? 0);
+        dispatch(
+            $job,
+            $notification->getDelay()     ?? 0,
+            $notification->getTries()     ?? 1,
+            $notification->getQueueName() ?? 'notification'
+        );
     }
 }
