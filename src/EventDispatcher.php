@@ -1,128 +1,131 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Apffth\Hyperf\Notification;
 
 use Apffth\Hyperf\Notification\Contracts\EventDispatcherInterface;
+use Apffth\Hyperf\Notification\Events\NotificationFailed;
 use Apffth\Hyperf\Notification\Events\NotificationSending;
 use Apffth\Hyperf\Notification\Events\NotificationSent;
-use Apffth\Hyperf\Notification\Events\NotificationFailed;
 use Hyperf\Logger\LoggerFactory;
 use Psr\Container\ContainerInterface;
+use Throwable;
 
 class EventDispatcher implements EventDispatcherInterface
 {
     /**
-     * 事件监听器
+     * 事件监听器.
      */
     protected array $listeners = [];
 
     /**
-     * 容器实例
+     * 容器实例.
      */
     protected ContainerInterface $container;
 
     /**
-     * 日志实例
+     * 日志实例.
      */
     protected $logger;
 
     /**
-     * 是否启用事件
+     * 是否启用事件.
      */
     protected bool $enabled;
 
     public function __construct(ContainerInterface $container, bool $enabled = true)
     {
         $this->container = $container;
-        $this->enabled = $enabled;
-        
+        $this->enabled   = $enabled;
+
         if ($enabled) {
             $this->logger = $container->get(LoggerFactory::class)->get('notification');
         }
     }
 
     /**
-     * 分发通知发送前事件
+     * 分发通知发送前事件.
      */
     public function dispatchSending(NotificationSending $event): void
     {
-        if (!$this->enabled) {
+        if (! $this->enabled) {
             return;
         }
 
         $this->dispatch('notification.sending', $event);
-        
+
         // 记录日志
         if ($this->logger) {
             $this->logger->info('Notification sending', [
-                'notifiable' => $this->getNotifiableInfo($event->getNotifiable()),
+                'notifiable'   => $this->getNotifiableInfo($event->getNotifiable()),
                 'notification' => get_class($event->getNotification()),
-                'channel' => $event->getChannel(),
+                'channel'      => $event->getChannel(),
             ]);
         }
     }
 
     /**
-     * 分发通知发送后事件
+     * 分发通知发送后事件.
      */
     public function dispatchSent(NotificationSent $event): void
     {
-        if (!$this->enabled) {
+        if (! $this->enabled) {
             return;
         }
 
         $this->dispatch('notification.sent', $event);
-        
+
         // 记录日志
         if ($this->logger) {
             $this->logger->info('Notification sent', [
-                'notifiable' => $this->getNotifiableInfo($event->getNotifiable()),
+                'notifiable'   => $this->getNotifiableInfo($event->getNotifiable()),
                 'notification' => get_class($event->getNotification()),
-                'channel' => $event->getChannel(),
-                'successful' => $event->wasSuccessful(),
-                'sent_at' => $event->getSentAt()->format('Y-m-d H:i:s'),
+                'channel'      => $event->getChannel(),
+                'successful'   => $event->wasSuccessful(),
+                'sent_at'      => $event->getSentAt()->format('Y-m-d H:i:s'),
             ]);
         }
     }
 
     /**
-     * 分发通知失败事件
+     * 分发通知失败事件.
      */
     public function dispatchFailed(NotificationFailed $event): void
     {
-        if (!$this->enabled) {
+        if (! $this->enabled) {
             return;
         }
 
         $this->dispatch('notification.failed', $event);
-        
+
         // 记录日志
         if ($this->logger) {
             $this->logger->error('Notification failed', [
-                'notifiable' => $this->getNotifiableInfo($event->getNotifiable()),
+                'notifiable'   => $this->getNotifiableInfo($event->getNotifiable()),
                 'notification' => get_class($event->getNotification()),
-                'channel' => $event->getChannel(),
-                'error' => $event->getErrorMessage(),
-                'code' => $event->getErrorCode(),
-                'failed_at' => $event->getFailedAt()->format('Y-m-d H:i:s'),
+                'channel'      => $event->getChannel(),
+                'error'        => $event->getErrorMessage(),
+                'code'         => $event->getErrorCode(),
+                'failed_at'    => $event->getFailedAt()->format('Y-m-d H:i:s'),
             ]);
         }
     }
 
     /**
-     * 添加事件监听器
+     * 添加事件监听器.
      */
     public function listen(string $event, callable $listener): void
     {
-        if (!isset($this->listeners[$event])) {
+        if (! isset($this->listeners[$event])) {
             $this->listeners[$event] = [];
         }
-        
+
         $this->listeners[$event][] = $listener;
     }
 
     /**
-     * 移除事件监听器
+     * 移除事件监听器.
      */
     public function forget(string $event): void
     {
@@ -130,11 +133,28 @@ class EventDispatcher implements EventDispatcherInterface
     }
 
     /**
-     * 分发事件
+     * 设置是否启用事件.
+     */
+    public function setEnabled(bool $enabled): void
+    {
+        $this->enabled = $enabled;
+    }
+
+    /**
+     * 检查是否启用事件.
+     */
+    public function isEnabled(): bool
+    {
+        return $this->enabled;
+    }
+
+    /**
+     * 分发事件.
+     * @param mixed $payload
      */
     protected function dispatch(string $event, $payload): void
     {
-        if (!isset($this->listeners[$event])) {
+        if (! isset($this->listeners[$event])) {
             return;
         }
 
@@ -143,7 +163,7 @@ class EventDispatcher implements EventDispatcherInterface
                 if (is_callable($listener)) {
                     call_user_func($listener, $payload);
                 }
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 if ($this->logger) {
                     $this->logger->error('Event listener error', [
                         'event' => $event,
@@ -156,36 +176,21 @@ class EventDispatcher implements EventDispatcherInterface
     }
 
     /**
-     * 获取通知接收者信息
+     * 获取通知接收者信息.
+     * @param mixed $notifiable
      */
     protected function getNotifiableInfo($notifiable): array
     {
         if (is_object($notifiable)) {
             return [
                 'type' => get_class($notifiable),
-                'id' => method_exists($notifiable, 'getKey') ? $notifiable->getKey() : null,
+                'id'   => method_exists($notifiable, 'getKey') ? $notifiable->getKey() : null,
             ];
         }
 
         return [
-            'type' => gettype($notifiable),
+            'type'  => gettype($notifiable),
             'value' => is_scalar($notifiable) ? $notifiable : null,
         ];
     }
-
-    /**
-     * 设置是否启用事件
-     */
-    public function setEnabled(bool $enabled): void
-    {
-        $this->enabled = $enabled;
-    }
-
-    /**
-     * 检查是否启用事件
-     */
-    public function isEnabled(): bool
-    {
-        return $this->enabled;
-    }
-} 
+}

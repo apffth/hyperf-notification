@@ -16,10 +16,10 @@ class ConfigProvider
             'dependencies' => [
                 // 注册渠道管理器服务
                 ChannelManager::class => ChannelManager::class,
-                
+
                 // 注册事件分发器服务
                 EventDispatcherInterface::class => EventDispatcher::class,
-                EventDispatcher::class => EventDispatcher::class,
+                EventDispatcher::class          => EventDispatcher::class,
             ],
             'annotations' => [
                 'scan' => [
@@ -30,9 +30,9 @@ class ConfigProvider
             ],
             'publish' => [
                 [
-                    'id' => 'notification',
+                    'id'          => 'notification',
                     'description' => 'The config for notification.',
-                    'source' => __DIR__ . '/../config/notification.php',
+                    'source'      => __DIR__ . '/../config/notification.php',
                     'destination' => BASE_PATH . '/config/autoload/notification.php',
                 ],
             ],

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Apffth\Hyperf\Notification\Events;
 
 use Apffth\Hyperf\Notification\Notification;
@@ -7,33 +9,34 @@ use Apffth\Hyperf\Notification\Notification;
 class NotificationSending
 {
     /**
-     * 通知接收者
+     * 通知接收者.
      */
     public $notifiable;
 
     /**
-     * 通知实例
+     * 通知实例.
      */
     public Notification $notification;
 
     /**
-     * 通知渠道
+     * 通知渠道.
      */
     public string $channel;
 
     /**
-     * 是否应该发送通知
+     * 是否应该发送通知.
      */
     public bool $shouldSend = true;
 
     /**
-     * 创建新的事件实例
+     * 创建新的事件实例.
+     * @param mixed $notifiable
      */
     public function __construct($notifiable, Notification $notification, string $channel)
     {
-        $this->notifiable = $notifiable;
+        $this->notifiable   = $notifiable;
         $this->notification = $notification;
-        $this->channel = $channel;
+        $this->channel      = $channel;
     }
 
     /**
@@ -45,7 +48,7 @@ class NotificationSending
     }
 
     /**
-     * 检查是否应该发送通知
+     * 检查是否应该发送通知.
      */
     public function shouldSend(): bool
     {
@@ -53,7 +56,7 @@ class NotificationSending
     }
 
     /**
-     * 获取通知接收者
+     * 获取通知接收者.
      */
     public function getNotifiable()
     {
@@ -61,7 +64,7 @@ class NotificationSending
     }
 
     /**
-     * 获取通知实例
+     * 获取通知实例.
      */
     public function getNotification(): Notification
     {
@@ -69,7 +72,7 @@ class NotificationSending
     }
 
     /**
-     * 获取通知渠道
+     * 获取通知渠道.
      */
     public function getChannel(): string
     {

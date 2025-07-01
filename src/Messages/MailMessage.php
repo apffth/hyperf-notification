@@ -1,16 +1,25 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Apffth\Hyperf\Notification\Messages;
 
 class MailMessage
 {
     public $subject;
+
     public $greeting;
+
     public $introLines = [];
+
     public $outroLines = [];
+
     public $actionText;
+
     public $actionUrl;
+
     public $level = 'info';
+
     public $salutation;
 
     public function subject($subject)
@@ -34,7 +43,7 @@ class MailMessage
     public function action($text, $url)
     {
         $this->actionText = $text;
-        $this->actionUrl = $url;
+        $this->actionUrl  = $url;
         return $this;
     }
 

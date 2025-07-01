@@ -1,31 +1,35 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Apffth\Hyperf\Notification;
+
+use Throwable;
 
 use function Hyperf\Config\config;
 
 /**
- * 队列化通知的 Trait
+ * 队列化通知的 Trait.
  */
 trait Queueable
 {
     /**
-     * 队列名称
+     * 队列名称.
      */
     protected ?string $queue = null;
 
     /**
-     * 延迟时间（秒）
+     * 延迟时间（秒）.
      */
     protected ?int $delay = null;
 
     /**
-     * 最大重试次数
+     * 最大重试次数.
      */
     protected ?int $tries = null;
 
     /**
-     * 获取队列名称
+     * 获取队列名称.
      */
     public function getQueueName(): ?string
     {
@@ -34,7 +38,7 @@ trait Queueable
 
     /**
      * 设置队列名称
-     * 参考 Laravel 11: onQueue($queue)
+     * 参考 Laravel 11: onQueue($queue).
      */
     public function onQueue(string $queue): static
     {
@@ -43,7 +47,7 @@ trait Queueable
     }
 
     /**
-     * 获取延迟时间
+     * 获取延迟时间.
      */
     public function getDelay(): ?int
     {
@@ -52,7 +56,7 @@ trait Queueable
 
     /**
      * 设置延迟时间
-     * 参考 Laravel 11: delay($delay)
+     * 参考 Laravel 11: delay($delay).
      */
     public function delay(int $delay): static
     {
@@ -61,7 +65,7 @@ trait Queueable
     }
 
     /**
-     * 获取最大重试次数
+     * 获取最大重试次数.
      */
     public function getTries(): ?int
     {
@@ -70,7 +74,7 @@ trait Queueable
 
     /**
      * 设置最大重试次数
-     * 参考 Laravel 11: tries($tries)
+     * 参考 Laravel 11: tries($tries).
      */
     public function tries(int $tries): static
     {
@@ -80,9 +84,9 @@ trait Queueable
 
     /**
      * 处理失败的方法
-     * 参考 Laravel 11: failed($exception)
+     * 参考 Laravel 11: failed($exception).
      */
-    public function failed(\Throwable $exception): void
+    public function failed(Throwable $exception): void
     {
         // 默认实现，子类可以重写
         if (method_exists($this, 'onFailure')) {
@@ -92,7 +96,8 @@ trait Queueable
 
     /**
      * 判断是否应该队列化
-     * 参考 Laravel 11: shouldQueue($notifiable)
+     * 参考 Laravel 11: shouldQueue($notifiable).
+     * @param mixed $notifiable
      */
     public function shouldQueue($notifiable): bool
     {
@@ -101,7 +106,8 @@ trait Queueable
 
     /**
      * 判断是否应该发送
-     * 参考 Laravel 11: shouldSend($notifiable)
+     * 参考 Laravel 11: shouldSend($notifiable).
+     * @param mixed $notifiable
      */
     public function shouldSend($notifiable): bool
     {

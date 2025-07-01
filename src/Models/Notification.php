@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Apffth\Hyperf\Notification\Models;
 
-use Hyperf\DbConnection\Model\Model;
 use Hyperf\Database\Model\Relations\MorphTo;
+use Hyperf\DbConnection\Model\Model;
 
 class Notification extends Model
 {
@@ -19,7 +21,7 @@ class Notification extends Model
     ];
 
     protected array $casts = [
-        'data' => 'array',
+        'data'    => 'array',
         'read_at' => 'datetime',
     ];
 

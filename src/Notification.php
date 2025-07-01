@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Apffth\Hyperf\Notification;
 
 use Apffth\Hyperf\Notification\Messages\MailMessage;

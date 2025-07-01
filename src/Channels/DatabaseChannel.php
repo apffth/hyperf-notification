@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Apffth\Hyperf\Notification\Channels;
 
-use Apffth\Hyperf\Notification\Notification;
 use Apffth\Hyperf\Notification\Models\Notification as NotificationModel;
+use Apffth\Hyperf\Notification\Notification;
 use Hyperf\Stringable\Str;
 
 class DatabaseChannel implements ChannelInterface
@@ -17,18 +19,19 @@ class DatabaseChannel implements ChannelInterface
 
         $notificationModel = new NotificationModel();
         $notificationModel->fill([
-            'id' => (string) Str::uuid(),
-            'type' => get_class($notification),
+            'id'              => (string) Str::uuid(),
+            'type'            => get_class($notification),
             'notifiable_type' => $notifiableType,
-            'notifiable_id' => $notifiable->getKey(),
-            'data' => $data,
+            'notifiable_id'   => $notifiable->getKey(),
+            'data'            => $data,
         ]);
 
         $notificationModel->save();
     }
 
     /**
-     * 获取 notifiable 的类型，优先使用别名
+     * 获取 notifiable 的类型，优先使用别名.
+     * @param mixed $notifiable
      */
     protected function getNotifiableType($notifiable): string
     {

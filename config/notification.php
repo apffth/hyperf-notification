@@ -5,8 +5,6 @@ declare(strict_types=1);
 use function Hyperf\Support\env;
 
 return [
-
-
     /*
     |--------------------------------------------------------------------------
     | 通知队列配置
@@ -71,17 +69,17 @@ return [
     'channels' => [
         'mail' => [
             'driver' => 'mail',
-            'from' => [
+            'from'   => [
                 'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-                'name' => env('MAIL_FROM_NAME', 'Example'),
+                'name'    => env('MAIL_FROM_NAME', 'Example'),
             ],
         ],
         'database' => [
             'driver' => 'database',
-            'table' => 'notifications',
+            'table'  => 'notifications',
         ],
         'broadcast' => [
-            'driver' => 'broadcast',
+            'driver'     => 'broadcast',
             'connection' => env('BROADCAST_CONNECTION', 'redis'),
         ],
     ],

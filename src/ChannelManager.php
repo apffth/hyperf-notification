@@ -1,26 +1,29 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Apffth\Hyperf\Notification;
 
-use Apffth\Hyperf\Notification\Channels\ChannelInterface;
-use Apffth\Hyperf\Notification\Channels\MailChannel;
-use Apffth\Hyperf\Notification\Channels\DatabaseChannel;
 use Apffth\Hyperf\Notification\Channels\BroadcastChannel;
+use Apffth\Hyperf\Notification\Channels\ChannelInterface;
+use Apffth\Hyperf\Notification\Channels\DatabaseChannel;
+use Apffth\Hyperf\Notification\Channels\MailChannel;
 use Hyperf\Context\ApplicationContext;
+use InvalidArgumentException;
 
 class ChannelManager
 {
     /**
-     * 已注册的渠道
+     * 已注册的渠道.
      */
     protected array $channels = [];
 
     /**
-     * 默认渠道映射
+     * 默认渠道映射.
      */
     protected array $defaultChannels = [
-        'mail' => MailChannel::class,
-        'database' => DatabaseChannel::class,
+        'mail'      => MailChannel::class,
+        'database'  => DatabaseChannel::class,
         'broadcast' => BroadcastChannel::class,
     ];
 
@@ -33,12 +36,12 @@ class ChannelManager
     }
 
     /**
-     * 注册自定义渠道
+     * 注册自定义渠道.
      */
     public function register(string $name, string $channelClass): self
     {
-        if (!is_subclass_of($channelClass, ChannelInterface::class)) {
-            throw new \InvalidArgumentException(
+        if (! is_subclass_of($channelClass, ChannelInterface::class)) {
+            throw new InvalidArgumentException(
                 "Channel class {$channelClass} must implement " . ChannelInterface::class
             );
         }
@@ -48,7 +51,7 @@ class ChannelManager
     }
 
     /**
-     * 注册自定义渠道实例
+     * 注册自定义渠道实例.
      */
     public function registerInstance(string $name, ChannelInterface $channel): self
     {
@@ -57,11 +60,11 @@ class ChannelManager
     }
 
     /**
-     * 获取渠道实例
+     * 获取渠道实例.
      */
     public function get(string $name): ?ChannelInterface
     {
-        if (!isset($this->channels[$name])) {
+        if (! isset($this->channels[$name])) {
             return null;
         }
 
@@ -88,7 +91,7 @@ class ChannelManager
     }
 
     /**
-     * 检查渠道是否存在
+     * 检查渠道是否存在.
      */
     public function has(string $name): bool
     {
@@ -96,7 +99,7 @@ class ChannelManager
     }
 
     /**
-     * 获取所有已注册的渠道名称
+     * 获取所有已注册的渠道名称.
      */
     public function getRegisteredChannels(): array
     {
@@ -104,7 +107,7 @@ class ChannelManager
     }
 
     /**
-     * 移除渠道
+     * 移除渠道.
      */
     public function remove(string $name): self
     {
@@ -113,7 +116,7 @@ class ChannelManager
     }
 
     /**
-     * 清空所有自定义渠道（保留默认渠道）
+     * 清空所有自定义渠道（保留默认渠道）.
      */
     public function clear(): self
     {
@@ -122,7 +125,7 @@ class ChannelManager
     }
 
     /**
-     * 获取默认渠道映射
+     * 获取默认渠道映射.
      */
     public function getDefaultChannels(): array
     {
