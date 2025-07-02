@@ -18,7 +18,8 @@ class MailChannel implements ChannelInterface
     {
         $email = $notification->toMail($notifiable);
 
-        $email->from(config('mail.from.address'))->to(new Address($this->getEmail($notifiable)));
+        $email->from(new Address(config('mail.from.address'), config('mail.from.name')))
+            ->to(new Address($this->getEmail($notifiable)));
 
         $this->mailer->send($email);
     }
