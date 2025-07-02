@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Apffth\Hyperf\Notification\Channels;
 
 use Apffth\Hyperf\Notification\Notification;
+use Hyperf\Context\ApplicationContext;
+use Hyperf\Logger\LoggerFactory;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
+use Throwable;
 
 use function Hyperf\Config\config;
 
@@ -21,7 +24,15 @@ class MailChannel implements ChannelInterface
         $email->from(new Address(config('mail.from.address'), config('mail.from.name')))
             ->to(new Address($this->getEmail($notifiable)));
 
-        $this->mailer->send($email);
+        try {
+            $this->mailer->send($email);
+        } catch (Throwable $th) {
+            ApplicationContext::getContainer()
+                ->get(LoggerFactory::class)
+                ->get('notification', 'default')
+                ->error('Failed to send email: ' . $th->__toString());
+            throw $th;
+        }
     }
 
     protected function getEmail($notifiable): ?string
