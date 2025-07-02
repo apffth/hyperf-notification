@@ -93,6 +93,7 @@ MAIL_PASSWORD=your_password
 MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS="hello@example.com"
 MAIL_FROM_NAME="${APP_NAME}"
+MAIL_EHLO_DOMAIN=example.com
 ```
 
 ### 4. 配置文件说明
@@ -207,6 +208,181 @@ class UserController
 }
 ```
 
+### 4. 邮件通知功能
+
+Hyperf Notification 支持使用 Symfony Mailer 发送邮件通知，支持 SMTP 协议。
+
+#### 4.1 邮件配置
+
+确保在 `.env` 文件中配置了正确的邮件设置：
+
+```env
+# 邮件服务配置
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=your-email@gmail.com
+MAIL_FROM_NAME="Your App Name"
+MAIL_EHLO_DOMAIN=yourdomain.com
+```
+
+#### 4.2 创建邮件通知
+
+```php
+<?php
+
+namespace App\Notification;
+
+use Apffth\Hyperf\Notification\Notification;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+
+class WelcomeEmailNotification extends Notification
+{
+    public function via($notifiable): array
+    {
+        return ['mail'];
+    }
+
+    public function toMail($notifiable): TemplatedEmail
+    {
+        $email = new TemplatedEmail();
+        $email
+            ->subject('欢迎加入我们的平台！')
+            ->htmlTemplate('emails/welcome.html.twig')
+            ->textTemplate('emails/welcome.txt.twig')
+            ->context([
+                'user' => $notifiable,
+                'welcome_message' => '感谢您注册我们的平台！',
+                'login_url' => 'https://example.com/login',
+            ]);
+
+        return $email;
+    }
+}
+```
+
+#### 4.3 使用 Twig 模板
+
+创建 HTML 模板 `templates/emails/welcome.html.twig`：
+
+```twig
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>欢迎邮件</title>
+</head>
+<body>
+    <h1>欢迎 {{ user.name }}！</h1>
+    <p>{{ welcome_message }}</p>
+    <p>请点击下面的链接登录您的账户：</p>
+    <a href="{{ login_url }}">登录账户</a>
+    <p>如果您有任何问题，请随时联系我们。</p>
+</body>
+</html>
+```
+
+创建纯文本模板 `templates/emails/welcome.txt.twig`：
+
+```twig
+欢迎 {{ user.name }}！
+
+{{ welcome_message }}
+
+请访问以下链接登录您的账户：
+{{ login_url }}
+
+如果您有任何问题，请随时联系我们。
+```
+
+#### 4.4 发送邮件通知
+
+```php
+// 发送邮件通知
+$user->notify(new WelcomeEmailNotification());
+```
+
+#### 4.5 邮件路由
+
+如果您的用户模型没有 `email` 属性，可以通过 `routeNotificationFor` 方法指定邮件地址：
+
+```php
+<?php
+
+namespace App\Model;
+
+use Hyperf\DbConnection\Model\Model;
+use Apffth\Hyperf\Notification\Notifiable;
+
+class User extends Model
+{
+    use Notifiable;
+
+    /**
+     * 获取指定渠道的通知路由
+     */
+    public function routeNotificationFor($driver, $notification = null)
+    {
+        if ($driver === 'mail') {
+            return $this->email_address; // 使用自定义的邮箱字段
+        }
+
+        return parent::routeNotificationFor($driver, $notification);
+    }
+}
+```
+
+#### 4.6 邮件通知示例
+
+```php
+<?php
+
+namespace App\Notification;
+
+use Apffth\Hyperf\Notification\Notification;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+
+class PasswordResetNotification extends Notification
+{
+    private $token;
+
+    public function __construct($token)
+    {
+        $this->token = $token;
+    }
+
+    public function via($notifiable): array
+    {
+        return ['mail'];
+    }
+
+    public function toMail($notifiable): TemplatedEmail
+    {
+        $email = new TemplatedEmail();
+        $email
+            ->subject('密码重置请求')
+            ->htmlTemplate('emails/password-reset.html.twig')
+            ->textTemplate('emails/password-reset.txt.twig')
+            ->context([
+                'user' => $notifiable,
+                'reset_url' => 'https://example.com/reset-password?token=' . $this->token,
+                'expires_in' => '60分钟',
+            ]);
+
+        return $email;
+    }
+}
+
+// 使用示例
+$user->notify(new PasswordResetNotification($resetToken));
+```
+
+### 6. 查询通知
+```
+
 ### 4. 查询通知
 
 ```php
@@ -226,7 +402,7 @@ $user->markNotificationsAsRead();
 $user->deleteNotifications();
 ```
 
-### 5. 使用 Notifiable 别名
+### 7. 使用 Notifiable 别名
 
 为了保持数据库中的 `notifiable_type` 字段一致，即使类名发生变化，你可以使用别名功能。系统会按以下优先级查找别名：
 
@@ -303,7 +479,7 @@ class User extends Model
 
 这样，无论你的类名如何变化，数据库中的 `notifiable_type` 都会保持为 `App\Models\User`，确保数据的一致性和可维护性。
 
-### 6. 队列化通知
+### 8. 队列化通知
 
 参考 [Laravel 11 的队列化通知](https://laravel.com/docs/11.x/notifications#queueing-notifications)，Hyperf Notification 支持通过队列异步发送通知，提高应用性能。
 

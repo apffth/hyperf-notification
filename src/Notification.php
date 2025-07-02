@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Apffth\Hyperf\Notification;
 
-use Apffth\Hyperf\Notification\Messages\MailMessage;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 
 abstract class Notification
 {
@@ -30,13 +30,10 @@ abstract class Notification
     /**
      * 获取通知的邮件表示。
      * @param mixed $notifiable
-     * @return MailMessage
      */
-    public function toMail($notifiable)
+    public function toMail($notifiable): TemplatedEmail
     {
-        return (new MailMessage())
-            ->subject($this->getSubject())
-            ->line($this->getMessage());
+        return new TemplatedEmail();
     }
 
     /**
@@ -57,23 +54,5 @@ abstract class Notification
     public function toBroadcast($notifiable)
     {
         return $this->toArray($notifiable);
-    }
-
-    /**
-     * 获取通知的主题。
-     * @return string
-     */
-    protected function getSubject()
-    {
-        return '通知';
-    }
-
-    /**
-     * 获取通知的消息内容。
-     * @return string
-     */
-    protected function getMessage()
-    {
-        return '您有一条新通知';
     }
 }
