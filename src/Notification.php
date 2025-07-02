@@ -55,4 +55,54 @@ abstract class Notification
     {
         return $this->toArray($notifiable);
     }
+
+    /**
+     * 获取通知的短信表示。
+     * @param mixed $notifiable
+     * @return mixed
+     */
+    public function toSms($notifiable)
+    {
+        return null;
+    }
+
+    /**
+     * 获取通知的 Line Message 表示。
+     * @param mixed $notifiable
+     * @return mixed
+     */
+    public function toLineMessage($notifiable)
+    {
+        return null;
+    }
+
+    /**
+     * 获取通知的 Line Notify 表示。
+     * @param mixed $notifiable
+     * @return mixed
+     */
+    public function toLineNotify($notifiable)
+    {
+        return null;
+    }
+
+    /**
+     * 获取通知的 Slack 表示。
+     * @param mixed $notifiable
+     * @return mixed
+     */
+    public function toSlack($notifiable)
+    {
+        return null;
+    }
+
+    /**
+     * 获取通知的 App Push 表示。
+     * @param mixed $notifiable
+     * @return mixed
+     */
+    public function toAppPush($notifiable)
+    {
+        return null;
+    }
 }
