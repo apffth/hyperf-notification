@@ -27,26 +27,26 @@ class ConfigProvider
                 EventDispatcher::class          => EventDispatcher::class,
 
                 // 注册邮件服务
-                MailerInterface::class => function () {
-                    $defaultMailer = config('mail.default_mailer');
-                    $mailer        = config('mail.mailers.' . $defaultMailer);
+                // MailerInterface::class => function () {
+                //     $defaultMailer = config('mail.default_mailer');
+                //     $mailer        = config('mail.mailers.' . $defaultMailer);
 
-                    $transport = new EsmtpTransport(
-                        host: $mailer['host'],
-                        port: $mailer['port'],
-                        tls: $mailer['encryption'] === 'tls'
-                    );
+                //     $transport = new EsmtpTransport(
+                //         host: $mailer['host'],
+                //         port: $mailer['port'],
+                //         tls: $mailer['encryption'] === 'tls'
+                //     );
 
-                    if (! empty($mailer['username'])) {
-                        $transport->setUsername($mailer['username']);
-                    }
+                //     if (! empty($mailer['username'])) {
+                //         $transport->setUsername($mailer['username']);
+                //     }
 
-                    if (! empty($mailer['password'])) {
-                        $transport->setPassword($mailer['password']);
-                    }
+                //     if (! empty($mailer['password'])) {
+                //         $transport->setPassword($mailer['password']);
+                //     }
 
-                    return new Mailer($transport);
-                },
+                //     return new Mailer($transport);
+                // },
             ],
             'annotations' => [
                 'scan' => [
