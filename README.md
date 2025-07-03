@@ -381,9 +381,6 @@ $user->notify(new PasswordResetNotification($resetToken));
 ```
 
 ### 6. 查询通知
-```
-
-### 4. 查询通知
 
 ```php
 // 获取所有通知
@@ -402,7 +399,262 @@ $user->markNotificationsAsRead();
 $user->deleteNotifications();
 ```
 
-### 7. 使用 Notifiable 别名
+### 5. 渠道返回值支持
+
+Hyperf Notification 支持获取渠道 `send()` 方法的返回值，让你可以在业务代码中处理发送结果。
+
+#### 5.1 渠道返回值类型
+
+每个渠道都会返回相应的发送结果信息：
+
+**邮件渠道返回值：**
+```php
+[
+    'success' => true,
+    'message_id' => '<message-id@example.com>',
+    'to' => 'user@example.com',
+    'subject' => '邮件主题',
+    'sent_at' => '2024-01-01 12:00:00',
+]
+```
+
+**数据库渠道返回值：**
+```php
+[
+    'success' => true,
+    'notification_id' => 'uuid-string',
+    'notifiable_type' => 'App\\Model\\User',
+    'notifiable_id' => 1,
+    'type' => 'App\\Notification\\WelcomeNotification',
+    'created_at' => '2024-01-01 12:00:00',
+]
+```
+
+**广播渠道返回值：**
+```php
+[
+    'success' => true,
+    'channel' => 'App.Models.User.1',
+    'event' => 'App\\Notification\\WelcomeNotification',
+    'data' => [...],
+    'broadcasted_at' => '2024-01-01 12:00:00',
+]
+```
+
+#### 5.2 在通知类中获取渠道返回值
+
+```php
+<?php
+
+namespace App\Notification;
+
+use Apffth\Hyperf\Notification\Notification;
+use Symfony\Bridge\Twig\Mime\TemplatedEmail;
+
+class WelcomeNotification extends Notification
+{
+    public function via($notifiable): array
+    {
+        return ['mail', 'database'];
+    }
+
+    public function toMail($notifiable): TemplatedEmail
+    {
+        $email = new TemplatedEmail();
+        $email->subject('欢迎加入我们！')
+            ->htmlTemplate('emails/welcome.html.twig')
+            ->context([
+                'user' => $notifiable,
+                'message' => '感谢您注册我们的平台！',
+            ]);
+
+        return $email;
+    }
+
+    public function toDatabase($notifiable): array
+    {
+        return [
+            'message' => '欢迎加入我们！',
+            'user_name' => $notifiable->name,
+            'type' => 'welcome',
+        ];
+    }
+
+    /**
+     * 通知发送完成后的回调方法
+     * 可以在这里处理渠道返回值
+     */
+    public function afterSend($notifiable): void
+    {
+        // 获取所有渠道的返回值
+        $responses = $this->getChannelResponses();
+        
+        // 处理邮件渠道的返回值
+        if ($this->hasChannelResponse('mail')) {
+            $mailResponse = $this->getChannelResponse('mail');
+            $this->logEmailSent($notifiable, $mailResponse);
+        }
+
+        // 处理数据库渠道的返回值
+        if ($this->hasChannelResponse('database')) {
+            $dbResponse = $this->getChannelResponse('database');
+            $this->logNotificationCreated($notifiable, $dbResponse);
+        }
+    }
+
+    protected function logEmailSent($notifiable, array $response): void
+    {
+        // 记录邮件发送日志
+        $logData = [
+            'user_id' => $notifiable->getKey(),
+            'email' => $response['to'],
+            'message_id' => $response['message_id'],
+            'sent_at' => $response['sent_at'],
+        ];
+        
+        // 写入日志或数据库
+        \Hyperf\Utils\ApplicationContext::getContainer()
+            ->get(\Psr\Log\LoggerInterface::class)
+            ->info('邮件发送成功', $logData);
+    }
+
+    protected function logNotificationCreated($notifiable, array $response): void
+    {
+        // 记录通知创建日志
+        $logData = [
+            'user_id' => $notifiable->getKey(),
+            'notification_id' => $response['notification_id'],
+            'type' => $response['type'],
+        ];
+        
+        \Hyperf\Utils\ApplicationContext::getContainer()
+            ->get(\Psr\Log\LoggerInterface::class)
+            ->info('通知创建成功', $logData);
+    }
+}
+```
+
+#### 5.3 在业务代码中获取渠道返回值
+
+```php
+<?php
+
+namespace App\Controller;
+
+use App\Model\User;
+use App\Notification\WelcomeNotification;
+use Apffth\Hyperf\Notification\NotificationSender;
+
+class UserController
+{
+    public function register()
+    {
+        // 创建用户
+        $user = User::create([
+            'name' => '张三',
+            'email' => 'zhangsan@example.com',
+        ]);
+
+        // 创建通知
+        $notification = new WelcomeNotification();
+
+        // 发送通知
+        NotificationSender::send($user, $notification);
+
+        // 获取所有渠道的返回值
+        $responses = $notification->getChannelResponses();
+        
+        // 处理返回值
+        $this->handleChannelResponses($responses, $user);
+
+        return '注册成功！';
+    }
+
+    protected function handleChannelResponses(array $responses, User $user): void
+    {
+        foreach ($responses as $channel => $response) {
+            switch ($channel) {
+                case 'mail':
+                    if ($response['success']) {
+                        // 邮件发送成功，更新用户状态
+                        $user->update(['email_sent_at' => now()]);
+                    }
+                    break;
+                    
+                case 'database':
+                    if ($response['success']) {
+                        // 数据库通知创建成功，增加通知计数
+                        $user->increment('notification_count');
+                    }
+                    break;
+            }
+        }
+    }
+}
+```
+
+#### 5.4 渠道返回值相关方法
+
+Notification 基类提供了以下方法来处理渠道返回值：
+
+```php
+// 获取所有渠道的返回值
+$responses = $notification->getChannelResponses();
+
+// 获取指定渠道的返回值
+$mailResponse = $notification->getChannelResponse('mail');
+
+// 检查是否有指定渠道的返回值
+if ($notification->hasChannelResponse('database')) {
+    // 处理数据库渠道返回值
+}
+
+// 获取第一个渠道的返回值
+$firstResponse = $notification->getFirstChannelResponse();
+
+// 检查是否所有渠道都发送成功
+if ($notification->allChannelsSuccessful()) {
+    echo '所有渠道都发送成功！';
+}
+
+// 获取第一个成功的渠道响应
+$successResponse = $notification->getFirstSuccessfulResponse();
+```
+
+#### 5.5 自定义渠道返回值
+
+如果你创建了自定义渠道，可以返回任何有意义的数据：
+
+```php
+<?php
+
+namespace App\Notification\Channels;
+
+use Apffth\Hyperf\Notification\Channels\ChannelInterface;
+use Apffth\Hyperf\Notification\Notification;
+
+class SmsChannel implements ChannelInterface
+{
+    public function send($notifiable, Notification $notification): mixed
+    {
+        $message = $notification->toSms($notifiable);
+        
+        // 发送短信的逻辑...
+        $result = $this->sendSms($message);
+        
+        // 返回短信发送结果
+        return [
+            'success' => $result['success'],
+            'message_id' => $result['message_id'],
+            'phone' => $this->getPhone($notifiable),
+            'sent_at' => date('Y-m-d H:i:s'),
+            'cost' => $result['cost'] ?? 0,
+        ];
+    }
+}
+```
+
+### 6. 查询通知
 
 为了保持数据库中的 `notifiable_type` 字段一致，即使类名发生变化，你可以使用别名功能。系统会按以下优先级查找别名：
 

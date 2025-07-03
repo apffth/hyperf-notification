@@ -10,7 +10,7 @@ use Hyperf\Stringable\Str;
 
 class DatabaseChannel implements ChannelInterface
 {
-    public function send($notifiable, Notification $notification)
+    public function send($notifiable, Notification $notification): mixed
     {
         $data = $notification->toDatabase($notifiable);
 
@@ -27,6 +27,16 @@ class DatabaseChannel implements ChannelInterface
         ]);
 
         $notificationModel->save();
+
+        // 返回创建的数据库记录信息
+        return [
+            'success' => true,
+            'notification_id' => $notificationModel->id,
+            'notifiable_type' => $notifiableType,
+            'notifiable_id' => $notifiable->getKey(),
+            'type' => get_class($notification),
+            'created_at' => $notificationModel->created_at,
+        ];
     }
 
     /**

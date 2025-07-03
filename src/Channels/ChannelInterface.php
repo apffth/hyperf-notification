@@ -11,6 +11,7 @@ interface ChannelInterface
     /**
      * 发送通知。
      * @param mixed $notifiable
+     * @return mixed 渠道发送的返回值
      */
-    public function send($notifiable, Notification $notification);
+    public function send($notifiable, Notification $notification): mixed;
 }

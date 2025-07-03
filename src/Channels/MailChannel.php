@@ -13,7 +13,7 @@ use function Hyperf\Config\config;
 
 class MailChannel implements ChannelInterface
 {
-    public function send($notifiable, Notification $notification)
+    public function send($notifiable, Notification $notification): mixed
     {
         $email = $notification->toMail($notifiable);
 
@@ -21,7 +21,16 @@ class MailChannel implements ChannelInterface
             ->to(new Address($this->getEmail($notifiable)));
 
         $mailer = $this->getMailer();
-        $mailer->send($email);
+        $result = $mailer->send($email);
+
+        // 返回发送结果信息
+        return [
+            'success' => true,
+            'message_id' => $email->getHeaders()->get('Message-ID')?->getBodyAsString(),
+            'to' => $this->getEmail($notifiable),
+            'subject' => $email->getSubject(),
+            'sent_at' => date('Y-m-d H:i:s'),
+        ];
     }
 
     private function getEmail($notifiable): ?string

@@ -97,6 +97,7 @@ class NotificationSender
     {
         $channels        = $notification->via($notifiable);
         $eventDispatcher = static::getEventDispatcher();
+        $responses       = [];
 
         foreach ($channels as $channel) {
             // 触发发送前事件
@@ -111,6 +112,9 @@ class NotificationSender
             try {
                 $channelInstance = static::getChannelManager()->get($channel);
                 $response        = $channelInstance->send($notifiable, $notification);
+                
+                // 收集渠道返回值
+                $responses[$channel] = $response;
 
                 // 触发发送后事件
                 $sentEvent = new NotificationSent($notifiable, $notification, $channel, $response);
@@ -124,6 +128,16 @@ class NotificationSender
                 $notification->failed($e);
                 throw $e;
             }
+        }
+
+        // 将渠道返回值传递给通知类
+        if (!empty($responses)) {
+            $notification->setChannelResponses($responses);
+        }
+
+        // 调用通知类的 afterSend 方法
+        if (method_exists($notification, 'afterSend')) {
+            $notification->afterSend($notifiable);
         }
     }
 

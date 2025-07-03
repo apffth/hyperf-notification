@@ -11,11 +11,15 @@ abstract class Notification
     use Queueable;
 
     /**
-     * 获取通知的发送渠道。
-     * @param mixed $notifiable
-     * @return array|string
+     * 渠道返回值存储.
      */
-    abstract public function via($notifiable);
+    protected array $channelResponses = [];
+
+    /**
+     * 获取通知应该发送的渠道。
+     * @param mixed $notifiable
+     */
+    abstract public function via($notifiable): array;
 
     /**
      * 获取通知的数组表示。
@@ -39,21 +43,19 @@ abstract class Notification
     /**
      * 获取通知的数据库表示。
      * @param mixed $notifiable
-     * @return array
      */
-    public function toDatabase($notifiable)
+    public function toDatabase($notifiable): array
     {
-        return $this->toArray($notifiable);
+        return [];
     }
 
     /**
      * 获取通知的广播表示。
      * @param mixed $notifiable
-     * @return array
      */
-    public function toBroadcast($notifiable)
+    public function toBroadcast($notifiable): array
     {
-        return $this->toArray($notifiable);
+        return [];
     }
 
     /**
@@ -104,5 +106,51 @@ abstract class Notification
     public function toAppPush($notifiable)
     {
         return null;
+    }
+
+    /**
+     * 发送后处理.
+     * @param mixed $notifiable
+     */
+    public function afterSend($notifiable): void {}
+
+    /**
+     * 设置渠道返回值
+     */
+    public function setChannelResponses(array $responses): void
+    {
+        $this->channelResponses = $responses;
+    }
+
+    /**
+     * 获取所有渠道的返回值
+     */
+    public function getChannelResponses(): array
+    {
+        return $this->channelResponses;
+    }
+
+    /**
+     * 获取指定渠道的返回值
+     */
+    public function getChannelResponse(string $channel): mixed
+    {
+        return $this->channelResponses[$channel] ?? null;
+    }
+
+    /**
+     * 检查是否有指定渠道的返回值
+     */
+    public function hasChannelResponse(string $channel): bool
+    {
+        return isset($this->channelResponses[$channel]);
+    }
+
+    /**
+     * 获取第一个渠道的返回值
+     */
+    public function getFirstChannelResponse(): mixed
+    {
+        return reset($this->channelResponses) ?: null;
     }
 }
