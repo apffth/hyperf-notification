@@ -17,9 +17,7 @@ return [
     // 模板路径配置
     'paths' => [
         // 邮件模板路径
-        'emails' => BASE_PATH . '/storage/emails',
-        // 通用模板路径
-        'views' => BASE_PATH . '/storage/views',
+        BASE_PATH . '/storage/emails',
     ],
 
     // Twig 环境选项
