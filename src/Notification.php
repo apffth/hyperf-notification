@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace Apffth\Hyperf\Notification;
 
+use Hyperf\Stringable\Str;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 
 abstract class Notification
 {
     use Queueable;
+
+    /**
+     * 通知 ID.
+     */
+    protected string $id = '';
 
     /**
      * 渠道返回值存储.
@@ -20,6 +26,22 @@ abstract class Notification
      * @param mixed $notifiable
      */
     abstract public function via($notifiable): array;
+
+    /**
+     * 获取通知 ID.
+     */
+    public function getId(): string
+    {
+        return $this->id;
+    }
+
+    /**
+     * 设置通知 ID.
+     */
+    public function setId(): void
+    {
+        $this->id = (string) Str::uuid()->toString();
+    }
 
     /**
      * 获取通知的数组表示。

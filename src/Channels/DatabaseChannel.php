@@ -6,7 +6,6 @@ namespace Apffth\Hyperf\Notification\Channels;
 
 use Apffth\Hyperf\Notification\Models\Notification as NotificationModel;
 use Apffth\Hyperf\Notification\Notification;
-use Hyperf\Stringable\Str;
 
 class DatabaseChannel implements ChannelInterface
 {
@@ -19,7 +18,7 @@ class DatabaseChannel implements ChannelInterface
 
         $notificationModel = new NotificationModel();
         $notificationModel->fill([
-            'id'              => (string) Str::uuid(),
+            'id'              => $notification->getId(),
             'type'            => get_class($notification),
             'notifiable_type' => $notifiableType,
             'notifiable_id'   => $notifiable->getKey(),
@@ -30,12 +29,12 @@ class DatabaseChannel implements ChannelInterface
 
         // 返回创建的数据库记录信息
         return [
-            'success' => true,
+            'success'         => true,
             'notification_id' => $notificationModel->id,
             'notifiable_type' => $notifiableType,
-            'notifiable_id' => $notifiable->getKey(),
-            'type' => get_class($notification),
-            'created_at' => $notificationModel->created_at,
+            'notifiable_id'   => $notifiable->getKey(),
+            'type'            => get_class($notification),
+            'created_at'      => $notificationModel->created_at,
         ];
     }
 

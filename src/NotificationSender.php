@@ -95,6 +95,8 @@ class NotificationSender
      */
     public static function sendNow($notifiable, Notification $notification)
     {
+        $notification->setId();
+        
         $channels        = $notification->via($notifiable);
         $eventDispatcher = static::getEventDispatcher();
         $responses       = [];
