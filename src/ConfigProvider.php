@@ -20,6 +20,9 @@ class ConfigProvider
                 // 注册事件分发器服务
                 EventDispatcherInterface::class => EventDispatcher::class,
                 EventDispatcher::class          => EventDispatcher::class,
+
+                // 注册 Twig 服务提供者
+                TwigServiceProvider::class => TwigServiceProvider::class,
             ],
             'annotations' => [
                 'scan' => [
@@ -34,6 +37,12 @@ class ConfigProvider
                     'description' => 'The config for notification.',
                     'source'      => __DIR__ . '/../config/notification.php',
                     'destination' => BASE_PATH . '/config/autoload/notification.php',
+                ],
+                [
+                    'id'          => 'twig',
+                    'description' => 'The config for twig template engine.',
+                    'source'      => __DIR__ . '/../config/twig.php',
+                    'destination' => BASE_PATH . '/config/autoload/twig.php',
                 ],
             ],
             'listeners' => [

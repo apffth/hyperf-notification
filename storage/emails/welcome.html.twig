@@ -1,0 +1,41 @@
+{% extends "layout.html.twig" %}
+
+{% block title %}欢迎加入 {{ app_name }}{% endblock %}
+
+{% block content %}
+    <h2>欢迎 {{ userName }}！</h2>
+    
+    <div class="alert alert-success">
+        <p>{{ message }}</p>
+    </div>
+    
+    <p>感谢您注册我们的平台。我们很高兴您能加入我们！</p>
+    
+    <p>以下是一些有用的信息：</p>
+    <ul>
+        <li><strong>您的账户已成功创建</strong></li>
+        <li><strong>您可以立即开始使用我们的服务</strong></li>
+        <li><strong>如有任何问题，请随时联系我们的客服团队</strong></li>
+    </ul>
+    
+    <p>为了确保您的账户安全，我们建议您：</p>
+    <ul>
+        <li>设置一个强密码</li>
+        <li>启用双重身份验证</li>
+        <li>定期更新您的个人信息</li>
+    </ul>
+    
+    <div style="text-align: center; margin: 30px 0;">
+        <a href="{{ login_url }}" class="button">立即登录</a>
+    </div>
+    
+    <p>如果您在登录过程中遇到任何问题，请点击下面的链接重置密码：</p>
+    <div style="text-align: center;">
+        <a href="{{ forgot_password_url }}" class="button">忘记密码？</a>
+    </div>
+    
+    <p>再次感谢您选择 {{ app_name }}！</p>
+    
+    <p>祝您使用愉快！<br>
+    {{ app_name }} 团队</p>
+{% endblock %} 

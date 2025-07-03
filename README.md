@@ -210,7 +210,7 @@ class UserController
 
 ### 4. 邮件通知功能
 
-Hyperf Notification 支持使用 Symfony Mailer 发送邮件通知，支持 SMTP 协议。
+Hyperf Notification 支持使用 Symfony Mailer 发送邮件通知，支持 SMTP 协议和 Twig 模板引擎。
 
 #### 4.1 邮件配置
 
@@ -227,9 +227,60 @@ MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS=your-email@gmail.com
 MAIL_FROM_NAME="Your App Name"
 MAIL_EHLO_DOMAIN=yourdomain.com
+
+# Twig 模板引擎配置
+APP_DEBUG=true
+TWIG_CACHE=false
+APP_TIMEZONE=Asia/Shanghai
+APP_NAME="Your App Name"
+APP_URL=http://localhost:9501
 ```
 
-#### 4.2 创建邮件通知
+#### 4.2 Twig 配置
+
+##### 4.2.1 安装 Twig 依赖
+
+```bash
+composer require twig/twig
+```
+
+##### 4.2.2 Twig 配置文件
+
+系统会自动发布 `config/autoload/twig.php` 配置文件，您可以根据需要修改：
+
+```php
+<?php
+
+declare(strict_types=1);
+
+return [
+    // 模板路径配置
+    'paths' => [
+        'emails' => BASE_PATH . '/templates/emails',
+        'views' => BASE_PATH . '/templates/views',
+    ],
+    
+    // Twig 环境选项
+    'options' => [
+        'debug' => env('APP_DEBUG', false),
+        'cache' => env('TWIG_CACHE', true),
+        'cache_path' => BASE_PATH . '/runtime/twig/cache',
+        'auto_reload' => env('APP_DEBUG', false),
+        'strict_variables' => env('APP_DEBUG', false),
+        'charset' => 'UTF-8',
+        'timezone' => env('APP_TIMEZONE', 'Asia/Shanghai'),
+    ],
+    
+    // 全局变量
+    'globals' => [
+        'app_name' => env('APP_NAME', 'Hyperf App'),
+        'app_url' => env('APP_URL', 'http://localhost'),
+        'app_version' => env('APP_VERSION', '1.0.0'),
+    ],
+];
+```
+
+#### 4.3 创建邮件通知
 
 ```php
 <?php
@@ -254,9 +305,10 @@ class WelcomeEmailNotification extends Notification
             ->htmlTemplate('emails/welcome.html.twig')
             ->textTemplate('emails/welcome.txt.twig')
             ->context([
-                'user' => $notifiable,
-                'welcome_message' => '感谢您注册我们的平台！',
-                'login_url' => 'https://example.com/login',
+                'userName' => $notifiable->name,
+                'message' => '感谢您注册我们的平台！',
+                'login_url' => config('twig.globals.app_url') . '/login',
+                'forgot_password_url' => config('twig.globals.app_url') . '/forgot-password',
             ]);
 
         return $email;
@@ -266,36 +318,145 @@ class WelcomeEmailNotification extends Notification
 
 #### 4.3 使用 Twig 模板
 
-创建 HTML 模板 `templates/emails/welcome.html.twig`：
+##### 4.3.1 模板目录结构
+
+```
+templates/
+├── emails/
+│   ├── layout.html.twig          # 邮件布局模板
+│   ├── welcome.html.twig         # 欢迎邮件 HTML 版本
+│   ├── welcome.txt.twig          # 欢迎邮件纯文本版本
+│   ├── password-reset.html.twig  # 密码重置邮件 HTML 版本
+│   ├── password-reset.txt.twig   # 密码重置邮件纯文本版本
+│   └── ...
+└── views/
+    └── ...                       # 其他视图模板
+```
+
+##### 4.3.2 邮件布局模板
+
+创建 `templates/emails/layout.html.twig`：
 
 ```twig
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>欢迎邮件</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ app_name }}{% endblock %}</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .footer {
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
 </head>
 <body>
-    <h1>欢迎 {{ user.name }}！</h1>
-    <p>{{ welcome_message }}</p>
-    <p>请点击下面的链接登录您的账户：</p>
-    <a href="{{ login_url }}">登录账户</a>
-    <p>如果您有任何问题，请随时联系我们。</p>
+    <div class="email-container">
+        <div class="header">
+            <h1>{{ app_name }}</h1>
+        </div>
+        
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+        
+        <div class="footer">
+            <p>此邮件由 {{ app_name }} 系统自动发送</p>
+            <p>如果您有任何问题，请联系我们的客服团队</p>
+            <p>&copy; {{ "now"|date("Y") }} {{ app_name }}. 保留所有权利。</p>
+        </div>
+    </div>
 </body>
 </html>
+```
+
+##### 4.3.3 欢迎邮件模板
+
+创建 HTML 模板 `templates/emails/welcome.html.twig`：
+
+```twig
+{% extends "emails/layout.html.twig" %}
+
+{% block title %}欢迎加入 {{ app_name }}{% endblock %}
+
+{% block content %}
+    <h2>欢迎 {{ userName }}！</h2>
+    
+    <div class="alert alert-success">
+        <p>{{ message }}</p>
+    </div>
+    
+    <p>感谢您注册我们的平台。我们很高兴您能加入我们！</p>
+    
+    <div style="text-align: center; margin: 30px 0;">
+        <a href="{{ login_url }}" class="button">立即登录</a>
+    </div>
+    
+    <p>如果您在登录过程中遇到任何问题，请点击下面的链接重置密码：</p>
+    <div style="text-align: center;">
+        <a href="{{ forgot_password_url }}" class="button">忘记密码？</a>
+    </div>
+    
+    <p>再次感谢您选择 {{ app_name }}！</p>
+{% endblock %}
 ```
 
 创建纯文本模板 `templates/emails/welcome.txt.twig`：
 
 ```twig
-欢迎 {{ user.name }}！
+欢迎 {{ userName }}！
 
-{{ welcome_message }}
+{{ message }}
 
-请访问以下链接登录您的账户：
-{{ login_url }}
+感谢您注册我们的平台。我们很高兴您能加入我们！
 
-如果您有任何问题，请随时联系我们。
+立即登录：{{ login_url }}
+
+如果您在登录过程中遇到任何问题，请访问：{{ forgot_password_url }}
+
+再次感谢您选择 {{ app_name }}！
+
+---
+此邮件由 {{ app_name }} 系统自动发送
+如果您有任何问题，请联系我们的客服团队
+© {{ "now"|date("Y") }} {{ app_name }}. 保留所有权利。
 ```
 
 #### 4.4 发送邮件通知
