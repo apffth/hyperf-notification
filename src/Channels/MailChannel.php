@@ -21,24 +21,28 @@ class MailChannel implements ChannelInterface
     {
         $email = $notification->toMail($notifiable);
 
+        $toAddress = $this->getEmail($notifiable);
+        if (empty($toAddress)) {
+            return [
+                'success' => false,
+                'message' => 'Email address is required',
+            ];
+        }
+
         // 如果是 TemplatedEmail，确保 Twig 环境已配置
         if ($email instanceof TemplatedEmail) {
             $this->configureTemplatedEmail($email);
         }
 
         $email->from(new Address(config('mail.from.address'), config('mail.from.name')))
-            ->to(new Address($this->getEmail($notifiable)));
+            ->to(new Address($toAddress));
 
         $mailer = $this->getMailer();
-        $result = $mailer->send($email);
+        $mailer->send($email);
 
-        // 返回发送结果信息
         return [
-            'success'    => true,
-            'message_id' => $email->getHeaders()->get('Message-ID')?->getBodyAsString(),
-            'to'         => $this->getEmail($notifiable),
-            'subject'    => $email->getSubject(),
-            'sent_at'    => date('Y-m-d H:i:s'),
+            'success' => true,
+            'message' => 'Email sent successfully',
         ];
     }
 
