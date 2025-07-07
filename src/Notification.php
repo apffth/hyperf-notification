@@ -131,6 +131,16 @@ abstract class Notification
     }
 
     /**
+     * 获取通知的语音表示。
+     * @param mixed $notifiable
+     * @return mixed
+     */
+    public function toVoice($notifiable)
+    {
+        return null;
+    }
+
+    /**
      * 发送后处理.
      * @param mixed $notifiable
      */
