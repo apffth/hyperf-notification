@@ -130,7 +130,7 @@ return [
         'auto_reload' => env('TWIG_AUTO_RELOAD', true),
         'strict_variables' => true,
         'charset' => 'UTF-8',
-        'timezone' => env('APP_TIMEZONE', 'Asia/Shanghai'),
+        'timezone' => env('APP_TIMEZONE', 'Asia/Taipei'),
     ],
     
     'globals' => [
@@ -236,7 +236,7 @@ class User extends Model
     use Notifiable;
 
     /**
-     * 获取邮件地址
+     * 为邮件渠道定义路由
      */
     public function routeNotificationForMail(): ?string
     {
@@ -247,6 +247,8 @@ class User extends Model
 
 ### 3. 发送通知
 
+默认情况下，所有通知都会被推送到队列中异步处理。
+
 ```php
 use App\Notifications\WelcomeNotification;
 
@@ -254,40 +256,77 @@ use App\Notifications\WelcomeNotification;
 $user = User::find(1);
 $notification = new WelcomeNotification('张三', '欢迎使用我们的系统！');
 
+// 此操作会将通知推送到队列
 $user->notify($notification);
 ```
 
-### 4. 队列化通知
+#### 同步发送通知
 
-#### 方式一
+如果你需要立即发送通知（不使用队列），可以使用 `NotificationSender::sendNow()` 方法：
 
 ```php
+use Apffth\Hyperf\Notification\NotificationSender;
 use App\Notifications\WelcomeNotification;
 
 // 发送通知
 $user = User::find(1);
-
 $notification = new WelcomeNotification('张三', '欢迎使用我们的系统！');
-$notification->delay(10);
 
-$user->notify($notification);
+// 此操作会立即发送通知
+NotificationSender::sendNow($user, $notification);
 ```
 
-#### 方式二
+或者，你可以在通知类中重写 `shouldQueue()` 方法使其默认同步发送：
 
 ```php
-use Apffth\Hyperf\Notification\Queueable;
-
 class WelcomeNotification extends Notification
 {
-    use Queueable;
+    // ...
 
-    public function __construct()
+    public function shouldQueue($notifiable): bool
     {
+        return false; // 返回 false 以禁用队列
+    }
+}
+```
+
+### 4. 队列化通知配置
+
+所有通知类都默认使用了 `Queueable` trait，让你可以方便地配置队列行为。
+
+#### 在发送时指定队列选项
+
+你可以在发送通知前，通过链式调用动态配置队列选项：
+
+```php
+$notification = new WelcomeNotification('张三', '欢迎使用我们的系统！');
+
+// 动态配置
+$notification->onQueue('high-priority')
+             ->delay(10) // 延迟10秒
+             ->tries(5);
+
+$user->notify($notification);
+```
+
+#### 在通知类中配置队列选项
+
+为了给某个通知类设置固定的队列选项，你可以在它的构造函数中进行配置：
+
+```php
+class WelcomeNotification extends Notification
+{
+    public function __construct(
+        protected string $userName,
+        protected string $welcomeMessage = '欢迎加入我们！'
+    ) {
+        // 设置默认队列选项
         $this->onQueue('notifications')
-             ->delay(60)
+             ->delay(60) // 默认延迟60秒
              ->tries(3);
     }
+    
+    // ... via(), toMail(), etc.
 }
 ```
 
@@ -568,17 +607,9 @@ class NotificationTest extends TestCase
 
 ## 常见问题
 
-### Q: 如何禁用某个渠道？
+### Q: 如何禁用队列处理？
 
-A: 在通知类的 `via` 方法中不返回该渠道名称，或者使用事件监听器阻止发送：
-
-```php
-NotificationSender::listen('notification.sending', function (NotificationSending $event) {
-    if ($event->getChannel() === 'mail') {
-        $event->preventSending();
-    }
-});
-```
+A: 默认所有通知都会进入队列。要同步发送，可以在通知类中重写 `shouldQueue()` 方法并返回 `false`，或者直接使用 `NotificationSender::sendNow()` 方法。
 
 ### Q: 如何自定义通知 ID？
 
