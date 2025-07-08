@@ -199,7 +199,7 @@ class WelcomeNotification extends Notification
     /**
      * 通知发送完成后的回调方法
      */
-    public function afterSend($notifiable): void
+    public function afterSend(mixed $response, string $channel, mixed $notifiable): void
     {
         // 获取所有渠道的返回值
         $responses = $this->getChannelResponses();
@@ -549,7 +549,7 @@ class User extends Model
 ```php
 class WelcomeNotification extends Notification
 {
-    public function afterSend($notifiable): void
+    public function afterSend(mixed $response, string $channel, mixed $notifiable): void
     {
         // 获取所有渠道的返回值
         $responses = $this->getChannelResponses();

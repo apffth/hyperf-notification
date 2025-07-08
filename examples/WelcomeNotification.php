@@ -56,42 +56,38 @@ class WelcomeNotification extends Notification
      * 通知发送完成后的回调方法
      * 可以在这里处理渠道返回值
      */
-    public function afterSend($notifiable): void
-    {
-        // 获取所有渠道的返回值
-        $responses = $this->getChannelResponses();
-        
+    public function afterSend(mixed $response, string $channel, mixed $notifiable): void
+    {        
         // 处理邮件渠道的返回值
-        if ($this->hasChannelResponse('mail')) {
-            $mailResponse = $this->getChannelResponse('mail');
+        if ($channel == 'mail') {
             echo "邮件发送成功！\n";
-            echo "收件人: {$mailResponse['to']}\n";
-            echo "主题: {$mailResponse['subject']}\n";
-            echo "发送时间: {$mailResponse['sent_at']}\n";
+            echo "收件人: {$response['to']}\n";
+            echo "主题: {$response['subject']}\n";
+            echo "发送时间: {$response['sent_at']}\n";
         }
 
         // 处理数据库渠道的返回值
-        if ($this->hasChannelResponse('database')) {
-            $dbResponse = $this->getChannelResponse('database');
+        if ($channel == 'database') {
             echo "数据库通知创建成功！\n";
-            echo "通知ID: {$dbResponse['notification_id']}\n";
-            echo "通知类型: {$dbResponse['type']}\n";
-            echo "创建时间: {$dbResponse['created_at']}\n";
+            echo "通知ID: {$response['notification_id']}\n";
+            echo "通知类型: {$response['type']}\n";
+            echo "创建时间: {$response['created_at']}\n";
         }
 
         // 记录所有渠道的发送结果
-        $this->logChannelResults($responses);
+        $this->logChannelResults($response, $channel);
     }
 
     /**
      * 记录渠道发送结果
      */
-    protected function logChannelResults(array $responses): void
+    protected function logChannelResults(mixed $response, string $channel): void
     {
         $logData = [
             'notification_class' => static::class,
             'user_name' => $this->userName,
-            'channel_results' => $responses,
+            'channel' => $channel,
+            'channel_results' => $response,
             'timestamp' => date('Y-m-d H:i:s'),
         ];
 

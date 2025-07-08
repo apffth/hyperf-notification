@@ -17,6 +17,16 @@ abstract class Notification
     protected string $id = '';
 
     /**
+     * @var string[]
+     */
+    public array $sentChannels = [];
+
+    /**
+     * @var string[]
+     */
+    public array $processedInAfterSend = [];
+
+    /**
      * 渠道返回值存储.
      */
     protected array $channelResponses = [];
@@ -142,9 +152,42 @@ abstract class Notification
 
     /**
      * 发送后处理.
+     * 此方法是 final 的，以确保其重复调用保护逻辑不被意外覆盖。
+     * 请在您的通知类中实现 afterChannelSent() 方法来处理每个渠道的发送回执。
      * @param mixed $notifiable
      */
-    public function afterSend($notifiable): void {}
+    final public function afterChannelsSend($notifiable): void
+    {
+        foreach ($this->getChannelResponses() as $channel => $response) {
+            if (in_array($channel, $this->processedInAfterSend, true)) {
+                continue;
+            }
+
+            $this->afterSend($response, $channel, $notifiable);
+
+            $this->processedInAfterSend[] = $channel;
+        }
+    }
+
+    /**
+     * 单个渠道发送成功后的回调方法.
+     *
+     * @param mixed $response 渠道的 send() 方法的返回值
+     * @param string $channel 渠道名称
+     * @param mixed $notifiable
+     */
+    public function afterSend(mixed $response, string $channel, mixed $notifiable): void
+    {
+        // 用户可以在通知类中覆盖此方法
+    }
+
+    /**
+     * @param string $channel
+     */
+    public function addSentChannel(string $channel): void
+    {
+        $this->sentChannels[] = $channel;
+    }
 
     /**
      * 设置渠道返回值

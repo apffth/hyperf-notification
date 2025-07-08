@@ -14,6 +14,7 @@ use Hyperf\Context\ApplicationContext;
 use Throwable;
 
 use function Hyperf\AsyncQueue\dispatch;
+use function Hyperf\Collection\collect;
 use function Hyperf\Config\config;
 
 class NotificationSender
@@ -98,9 +99,17 @@ class NotificationSender
     {
         $notification->setId();
 
-        $channels        = $notification->via($notifiable);
+        $channels = collect($notification->via($notifiable))
+            ->filter(fn ($channel) => ! in_array($channel, $notification->sentChannels))
+            ->all();
+
+        if (empty($channels)) {
+            return;
+        }
+
         $eventDispatcher = static::getEventDispatcher();
         $responses       = [];
+        $failed          = null;
 
         foreach ($channels as $channel) {
             // 触发发送前事件
@@ -121,6 +130,8 @@ class NotificationSender
 
                 $response = $channelInstance->send($notifiable, $notification);
 
+                $notification->addSentChannel($channel);
+
                 // 收集渠道返回值
                 $responses[$channel] = $response;
 
@@ -128,24 +139,30 @@ class NotificationSender
                 $sentEvent = new NotificationSent($notifiable, $notification, $channel, $response);
                 $eventDispatcher->dispatchSent($sentEvent);
             } catch (Throwable $e) {
+                if (is_null($failed)) {
+                    $failed = $e;
+                }
                 // 触发失败事件
                 $failedEvent = new NotificationFailed($notifiable, $notification, $channel, $e);
                 $eventDispatcher->dispatchFailed($failedEvent);
 
                 // 处理发送失败
                 $notification->failed($e);
-                throw $e;
             }
         }
 
         // 将渠道返回值传递给通知类
         if (! empty($responses)) {
-            $notification->setChannelResponses($responses);
+            $notification->setChannelResponses(array_merge($notification->getChannelResponses(), $responses));
         }
 
-        // 调用通知类的 afterSend 方法
-        if (method_exists($notification, 'afterSend')) {
-            $notification->afterSend($notifiable);
+        // 调用通知类的 afterChannelsSend 方法
+        if (method_exists($notification, 'afterChannelsSend')) {
+            $notification->afterChannelsSend($notifiable);
+        }
+
+        if ($failed) {
+            throw $failed;
         }
     }
 
