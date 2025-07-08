@@ -10,6 +10,7 @@ use Apffth\Hyperf\Notification\Events\NotificationSending;
 use Apffth\Hyperf\Notification\Events\NotificationSent;
 use Hyperf\Logger\LoggerFactory;
 use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 use Throwable;
 
 class EventDispatcher implements EventDispatcherInterface
@@ -27,7 +28,7 @@ class EventDispatcher implements EventDispatcherInterface
     /**
      * 日志实例.
      */
-    protected $logger;
+    protected ?LoggerInterface $logger = null;
 
     /**
      * 是否启用事件.
@@ -40,7 +41,25 @@ class EventDispatcher implements EventDispatcherInterface
         $this->enabled   = $enabled;
 
         if ($enabled) {
-            $this->logger = $container->get(LoggerFactory::class)->get('notification');
+            $this->initializeLogger();
+        }
+    }
+
+    /**
+     * 初始化日志实例
+     */
+    protected function initializeLogger(): void
+    {
+        try {
+            // 检查容器中是否有 LoggerFactory
+            if ($this->container->has(LoggerFactory::class)) {
+                $loggerFactory = $this->container->get(LoggerFactory::class);
+                $this->logger = $loggerFactory->get('notification');
+            }
+        } catch (Throwable $e) {
+            // 如果获取 LoggerFactory 失败，记录错误但不影响事件系统运行
+            // 这里可以选择记录到 error_log 或者静默处理
+            error_log('Failed to initialize notification logger: ' . $e->getMessage());
         }
     }
 
@@ -57,11 +76,16 @@ class EventDispatcher implements EventDispatcherInterface
 
         // 记录日志
         if ($this->logger) {
-            $this->logger->info('Notification sending', [
-                'notifiable'   => $this->getNotifiableInfo($event->getNotifiable()),
-                'notification' => get_class($event->getNotification()),
-                'channel'      => $event->getChannel(),
-            ]);
+            try {
+                $this->logger->info('Notification sending', [
+                    'notifiable'   => $this->getNotifiableInfo($event->getNotifiable()),
+                    'notification' => get_class($event->getNotification()),
+                    'channel'      => $event->getChannel(),
+                ]);
+            } catch (Throwable $e) {
+                // 日志记录失败不应影响事件分发
+                error_log('Failed to log notification sending event: ' . $e->getMessage());
+            }
         }
     }
 
@@ -78,13 +102,18 @@ class EventDispatcher implements EventDispatcherInterface
 
         // 记录日志
         if ($this->logger) {
-            $this->logger->info('Notification sent', [
-                'notifiable'   => $this->getNotifiableInfo($event->getNotifiable()),
-                'notification' => get_class($event->getNotification()),
-                'channel'      => $event->getChannel(),
-                'successful'   => $event->wasSuccessful(),
-                'sent_at'      => $event->getSentAt()->format('Y-m-d H:i:s'),
-            ]);
+            try {
+                $this->logger->info('Notification sent', [
+                    'notifiable'   => $this->getNotifiableInfo($event->getNotifiable()),
+                    'notification' => get_class($event->getNotification()),
+                    'channel'      => $event->getChannel(),
+                    'successful'   => $event->wasSuccessful(),
+                    'sent_at'      => $event->getSentAt()->format('Y-m-d H:i:s'),
+                ]);
+            } catch (Throwable $e) {
+                // 日志记录失败不应影响事件分发
+                error_log('Failed to log notification sent event: ' . $e->getMessage());
+            }
         }
     }
 
@@ -101,14 +130,19 @@ class EventDispatcher implements EventDispatcherInterface
 
         // 记录日志
         if ($this->logger) {
-            $this->logger->error('Notification failed', [
-                'notifiable'   => $this->getNotifiableInfo($event->getNotifiable()),
-                'notification' => get_class($event->getNotification()),
-                'channel'      => $event->getChannel(),
-                'error'        => $event->getErrorMessage(),
-                'code'         => $event->getErrorCode(),
-                'failed_at'    => $event->getFailedAt()->format('Y-m-d H:i:s'),
-            ]);
+            try {
+                $this->logger->error('Notification failed', [
+                    'notifiable'   => $this->getNotifiableInfo($event->getNotifiable()),
+                    'notification' => get_class($event->getNotification()),
+                    'channel'      => $event->getChannel(),
+                    'error'        => $event->getErrorMessage(),
+                    'code'         => $event->getErrorCode(),
+                    'failed_at'    => $event->getFailedAt()->format('Y-m-d H:i:s'),
+                ]);
+            } catch (Throwable $e) {
+                // 日志记录失败不应影响事件分发
+                error_log('Failed to log notification failed event: ' . $e->getMessage());
+            }
         }
     }
 
@@ -138,6 +172,11 @@ class EventDispatcher implements EventDispatcherInterface
     public function setEnabled(bool $enabled): void
     {
         $this->enabled = $enabled;
+        
+        // 如果启用事件但日志未初始化，尝试初始化日志
+        if ($enabled && $this->logger === null) {
+            $this->initializeLogger();
+        }
     }
 
     /**
@@ -146,6 +185,22 @@ class EventDispatcher implements EventDispatcherInterface
     public function isEnabled(): bool
     {
         return $this->enabled;
+    }
+
+    /**
+     * 获取日志实例
+     */
+    public function getLogger(): ?LoggerInterface
+    {
+        return $this->logger;
+    }
+
+    /**
+     * 设置日志实例
+     */
+    public function setLogger(?LoggerInterface $logger): void
+    {
+        $this->logger = $logger;
     }
 
     /**
@@ -165,11 +220,20 @@ class EventDispatcher implements EventDispatcherInterface
                 }
             } catch (Throwable $e) {
                 if ($this->logger) {
-                    $this->logger->error('Event listener error', [
-                        'event' => $event,
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString(),
-                    ]);
+                    try {
+                        $this->logger->error('Event listener error', [
+                            'event' => $event,
+                            'error' => $e->getMessage(),
+                            'trace' => $e->getTraceAsString(),
+                        ]);
+                    } catch (Throwable $logError) {
+                        // 如果日志记录也失败，使用 error_log 作为后备
+                        error_log('Event listener error (logger failed): ' . $e->getMessage());
+                        error_log('Logger error: ' . $logError->getMessage());
+                    }
+                } else {
+                    // 如果没有日志实例，使用 error_log 作为后备
+                    error_log('Event listener error: ' . $e->getMessage());
                 }
             }
         }

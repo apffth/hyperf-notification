@@ -6,13 +6,14 @@
 
 - ✅ 支持多种通知渠道（邮件、数据库、广播、Slack等）
 - ✅ 队列化通知支持
-- ✅ 通知事件系统
+- ✅ 通知事件系统（具有健壮性，支持无日志环境）
 - ✅ 数据库通知存储
 - ✅ 与 Laravel Notification API 完全兼容
 - ✅ 支持通知路由
 - ✅ 支持通知标记（已读/未读）
 - ✅ 支持 notifiable 别名，保持数据库类型标识一致
 - ✅ 支持自定义通知渠道
+- ✅ 事件系统容错处理，支持各种环境配置
 
 ## 安装
 
@@ -208,7 +209,110 @@ class UserController
 }
 ```
 
-### 4. 邮件通知功能
+### 4. 事件系统
+
+Hyperf Notification 提供了健壮的事件系统，支持通知发送前、发送后和失败事件。事件系统具有以下特性：
+
+#### 4.1 事件系统健壮性
+
+事件系统经过优化，具有良好的容错能力：
+
+- **无日志环境支持**：即使容器中没有配置 LoggerFactory，事件系统仍能正常工作
+- **日志记录容错**：如果日志记录失败，不会影响事件分发和通知发送
+- **动态配置**：支持运行时启用/禁用事件系统
+- **手动日志配置**：支持手动设置日志实例
+
+#### 4.2 事件类型
+
+```php
+// 通知发送前事件
+'notification.sending' => NotificationSending::class
+
+// 通知发送后事件  
+'notification.sent' => NotificationSent::class
+
+// 通知发送失败事件
+'notification.failed' => NotificationFailed::class
+```
+
+#### 4.3 事件监听器示例
+
+```php
+<?php
+
+namespace App\Listeners;
+
+use Apffth\Hyperf\Notification\Events\NotificationSending;
+use Apffth\Hyperf\Notification\Events\NotificationSent;
+use Apffth\Hyperf\Notification\Events\NotificationFailed;
+
+class NotificationEventListener
+{
+    public function handleSending(NotificationSending $event): void
+    {
+        // 在通知发送前执行
+        $notification = $event->getNotification();
+        $notifiable = $event->getNotifiable();
+        $channel = $event->getChannel();
+        
+        // 可以在这里阻止通知发送
+        // $event->preventSending();
+        
+        echo "准备通过 {$channel} 渠道发送通知给 " . get_class($notifiable);
+    }
+    
+    public function handleSent(NotificationSent $event): void
+    {
+        // 在通知发送后执行
+        if ($event->wasSuccessful()) {
+            echo "通知发送成功";
+        }
+    }
+    
+    public function handleFailed(NotificationFailed $event): void
+    {
+        // 在通知发送失败时执行
+        echo "通知发送失败: " . $event->getErrorMessage();
+    }
+}
+```
+
+#### 4.4 注册事件监听器
+
+```php
+<?php
+
+use Apffth\Hyperf\Notification\NotificationSender;
+
+// 注册事件监听器
+NotificationSender::listen('notification.sending', [NotificationEventListener::class, 'handleSending']);
+NotificationSender::listen('notification.sent', [NotificationEventListener::class, 'handleSent']);
+NotificationSender::listen('notification.failed', [NotificationEventListener::class, 'handleFailed']);
+```
+
+#### 4.5 不同环境下的使用
+
+**开发环境（有完整日志系统）：**
+```php
+// 自动获取 LoggerFactory，正常记录日志
+$dispatcher = new EventDispatcher($container, true);
+```
+
+**测试环境（无日志系统）：**
+```php
+// 没有 LoggerFactory，但事件系统正常工作
+$dispatcher = new EventDispatcher($container, true);
+// $dispatcher->getLogger() 返回 null，但事件分发正常
+```
+
+**生产环境（手动配置日志）：**
+```php
+// 手动设置日志实例
+$dispatcher = new EventDispatcher($container, true);
+$dispatcher->setLogger($customLogger);
+```
+
+### 5. 邮件通知功能
 
 Hyperf Notification 支持使用 Symfony Mailer 发送邮件通知，支持 SMTP 协议和 Twig 模板引擎。
 
