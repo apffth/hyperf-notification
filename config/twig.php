@@ -41,7 +41,7 @@ return [
         'charset' => 'UTF-8',
 
         // 默认时区
-        'timezone' => env('APP_TIMEZONE', 'Asia/Taipei'),
+        'timezone' => env('APP_TIMEZONE', 'Asia/Shanghai'),
     ],
 
     // 全局变量
