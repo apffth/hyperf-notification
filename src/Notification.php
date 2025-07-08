@@ -50,7 +50,9 @@ abstract class Notification
      */
     public function setId(): void
     {
-        $this->id = (string) Str::uuid()->toString();
+        if (empty($this->id)) {
+            $this->id = (string) Str::uuid()->toString();
+        }
     }
 
     /**
