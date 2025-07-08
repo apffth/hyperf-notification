@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Apffth\Hyperf\Notification;
 
+use Apffth\Hyperf\Notification\Channels\ChannelInterface;
 use Apffth\Hyperf\Notification\Contracts\EventDispatcherInterface;
 use Apffth\Hyperf\Notification\Events\NotificationFailed;
 use Apffth\Hyperf\Notification\Events\NotificationSending;
@@ -52,9 +53,8 @@ class NotificationSender
 
     /**
      * 注册自定义渠道实例.
-     * @param mixed $channel
      */
-    public static function registerChannelInstance(string $name, $channel): void
+    public static function registerChannelInstance(string $name, ChannelInterface $channel): void
     {
         static::getChannelManager()->registerInstance($name, $channel);
     }
@@ -96,7 +96,7 @@ class NotificationSender
     public static function sendNow($notifiable, Notification $notification)
     {
         $notification->setId();
-        
+
         $channels        = $notification->via($notifiable);
         $eventDispatcher = static::getEventDispatcher();
         $responses       = [];
@@ -114,7 +114,7 @@ class NotificationSender
             try {
                 $channelInstance = static::getChannelManager()->get($channel);
                 $response        = $channelInstance->send($notifiable, $notification);
-                
+
                 // 收集渠道返回值
                 $responses[$channel] = $response;
 
@@ -133,7 +133,7 @@ class NotificationSender
         }
 
         // 将渠道返回值传递给通知类
-        if (!empty($responses)) {
+        if (! empty($responses)) {
             $notification->setChannelResponses($responses);
         }
 
