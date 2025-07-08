@@ -9,6 +9,7 @@ use Apffth\Hyperf\Notification\Contracts\EventDispatcherInterface;
 use Apffth\Hyperf\Notification\Events\NotificationFailed;
 use Apffth\Hyperf\Notification\Events\NotificationSending;
 use Apffth\Hyperf\Notification\Events\NotificationSent;
+use Apffth\Hyperf\Notification\Exceptions\NotificationException;
 use Hyperf\Context\ApplicationContext;
 use Throwable;
 
@@ -113,7 +114,12 @@ class NotificationSender
 
             try {
                 $channelInstance = static::getChannelManager()->get($channel);
-                $response        = $channelInstance->send($notifiable, $notification);
+                
+                if (! $channelInstance instanceof ChannelInterface) {
+                    throw new NotificationException(500, 'Channel instance not found');
+                }
+
+                $response = $channelInstance->send($notifiable, $notification);
 
                 // 收集渠道返回值
                 $responses[$channel] = $response;

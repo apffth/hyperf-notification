@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Apffth\Hyperf\Notification\Channels;
 
+use Apffth\Hyperf\Notification\Exceptions\NotificationException;
 use Apffth\Hyperf\Notification\Notification;
 use Apffth\Hyperf\Notification\TwigServiceProvider;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
@@ -70,6 +71,10 @@ class MailChannel implements ChannelInterface
     {
         $defaultMailer = config('mail.default_mailer');
         $mailer        = config('mail.mailers.' . $defaultMailer);
+
+        if (empty($mailer)) {
+            throw new NotificationException(500, 'Mailer configuration not found');
+        }
 
         $transport = new EsmtpTransport(
             host: $mailer['host'],
