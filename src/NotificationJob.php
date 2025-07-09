@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Apffth\Hyperf\Notification;
 
 use Hyperf\AsyncQueue\Job;
+use Hyperf\Context\ApplicationContext;
 use Hyperf\Stringable\Str;
 use Throwable;
 
@@ -25,10 +26,13 @@ class NotificationJob extends Job
                 return;
             }
 
-            NotificationSender::sendNow($this->notifiable, $this->notification);
+            $sender = ApplicationContext::getContainer()->get(NotificationSender::class);
+            $sender->sendNow($this->notifiable, $this->notification);
         } catch (Throwable $e) {
             // 处理失败
-            $this->notification->failed($e);
+            if (method_exists($this->notification, 'failed')) {
+                $this->notification->failed($e);
+            }
             throw $e;
         }
     }

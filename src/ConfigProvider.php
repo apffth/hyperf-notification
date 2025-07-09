@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Apffth\Hyperf\Notification;
 
 use Apffth\Hyperf\Notification\Contracts\EventDispatcherInterface;
+use Symfony\Component\Mailer\MailerInterface;
 
 class ConfigProvider
 {
@@ -14,43 +15,34 @@ class ConfigProvider
 
         return [
             'dependencies' => [
-                // 注册渠道管理器服务
-                ChannelManager::class => ChannelManager::class,
-
-                // 注册事件分发器服务
                 EventDispatcherInterface::class => EventDispatcher::class,
-                EventDispatcher::class          => EventDispatcher::class,
-
-                // 注册 Twig 服务提供者
-                TwigServiceProvider::class => TwigServiceProvider::class,
+                MailerInterface::class          => MailerFactory::class,
             ],
-            'annotations' => [
-                'scan' => [
-                    'paths' => [
-                        __DIR__,
-                    ],
-                ],
-            ],
-            'publish' => [
+            'publish'      => [
                 [
-                    'id'          => 'notification',
+                    'id'          => 'config',
                     'description' => 'The config for notification.',
                     'source'      => __DIR__ . '/../config/notification.php',
                     'destination' => BASE_PATH . '/config/autoload/notification.php',
                 ],
                 [
-                    'id'          => 'twig',
-                    'description' => 'The config for twig template engine.',
+                    'id'          => 'config-mail',
+                    'description' => 'The config for mail.',
+                    'source'      => __DIR__ . '/../config/mail.php',
+                    'destination' => BASE_PATH . '/config/autoload/mail.php',
+                ],
+                [
+                    'id'          => 'config-twig',
+                    'description' => 'The config for twig.',
                     'source'      => __DIR__ . '/../config/twig.php',
                     'destination' => BASE_PATH . '/config/autoload/twig.php',
                 ],
-            ],
-            'listeners' => [
-                // 可以在这里注册事件监听器
-                // 例如：
-                // \Examples\EventListeners\LogNotificationSending::class,
-                // \Examples\EventListeners\LogNotificationSent::class,
-                // \Examples\EventListeners\LogNotificationFailed::class,
+                [
+                    'id'          => 'migration',
+                    'description' => 'The migration for notifications.',
+                    'source'      => __DIR__ . '/../database/migrations/2024_01_01_000000_create_notifications_table.php',
+                    'destination' => BASE_PATH . '/migrations/2024_01_01_000000_create_notifications_table.php',
+                ],
             ],
         ];
     }
