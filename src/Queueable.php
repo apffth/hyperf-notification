@@ -84,13 +84,16 @@ trait Queueable
 
     /**
      * 处理失败的方法
+     * 当通知发送失败时（无论是同步还是通过队列），此方法都将被调用。
+     * 用户可以在他们的 Notification 类中实现 `handleFailure` 方法来处理失败逻辑。
      * 参考 Laravel 11: failed($exception).
      */
     public function failed(Throwable $exception): void
     {
-        // 默认实现，子类可以重写
-        if (method_exists($this, 'onFailure')) {
-            $this->onFailure($exception);
+        // 默认实现，子类可以重写此方法，
+        // 或定义 handleFailure 方法来添加自定义的失败处理逻辑。
+        if (method_exists($this, 'handleFailure')) {
+            $this->handleFailure($exception);
         }
     }
 

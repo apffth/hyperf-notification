@@ -24,10 +24,7 @@ class MailChannel implements ChannelInterface
 
         $toAddress = $this->getEmail($notifiable);
         if (empty($toAddress)) {
-            return [
-                'success' => false,
-                'message' => 'Email address is required',
-            ];
+            throw new NotificationException(400, 'Email address is required for the notifiable.');
         }
 
         // 如果是 TemplatedEmail，确保 Twig 环境已配置

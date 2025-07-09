@@ -9,6 +9,10 @@ use Hyperf\DbConnection\Model\Model;
 
 class Notification extends Model
 {
+    public bool $incrementing = false;
+
+    protected string $keyType = 'string';
+
     protected ?string $table = 'notifications';
 
     protected array $fillable = [
