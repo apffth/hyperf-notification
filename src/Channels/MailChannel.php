@@ -12,12 +12,11 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Address;
 
 use function Hyperf\Config\config;
+use function Hyperf\Coroutine\run;
 
 class MailChannel implements ChannelInterface
 {
-    public function __construct(protected TwigServiceProvider $twigServiceProvider, protected MailerInterface $mailer)
-    {
-    }
+    public function __construct(protected TwigServiceProvider $twigServiceProvider, protected MailerInterface $mailer) {}
 
     public function send($notifiable, Notification $notification): mixed
     {
@@ -36,7 +35,13 @@ class MailChannel implements ChannelInterface
         $email->from(new Address(config('mail.from.address'), config('mail.from.name')))
             ->to(new Address($toAddress));
 
-        $this->mailer->send($email);
+        if ($notification->shouldQueue($notifiable)) {
+            $this->mailer->send($email);
+        } else {
+            run(function () use ($email) {
+                $this->mailer->send($email);
+            });
+        }
 
         return [
             'success' => true,
