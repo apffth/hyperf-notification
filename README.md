@@ -4,27 +4,23 @@
 
 ## 特性
 
-- 🚀 **高性能**: 基于 Hyperf 框架，支持异步队列处理
-- 📧 **多渠道支持**: 邮件、数据库、广播等多种通知渠道
-- 🔧 **易于扩展**: 支持自定义通知渠道
-- 📝 **事件系统**: 完整的通知生命周期事件
-- 🎯 **Laravel 兼容**: API 设计与 Laravel 通知保持一致
-- 📊 **渠道响应**: 支持获取各渠道的发送结果
-- 🎨 **模板支持**: 集成 Twig 模板引擎，支持邮件模板
-- 🔄 **队列支持**: 支持异步队列处理，提高性能
+- 🚀 **高性能**: 基于 Hyperf 框架，深度集成异步队列处理。
+- 📧 **多渠道支持**: 内置邮件、数据库等核心通知渠道。
+- 🔧 **易于扩展**: 支持通过依赖注入方便地集成自定义通知渠道。
+- 📝 **事件系统**: 与 Hyperf 原生事件系统无缝集成，提供完整的通知生命周期事件。
+- 🎯 **Laravel 兼容**: 核心 API 设计与 Laravel 通知保持一致，易于上手。
+- 🎨 **模板支持**: 集成 Twig 模板引擎，支持优雅的邮件模板。
 
 ## 支持的渠道
 
-- **邮件 (Mail)**: 使用 Symfony Mailer 发送邮件
-- **数据库 (Database)**: 将通知存储到数据库
-- **广播 (Broadcast)**: 实时广播通知
-- **自定义渠道**: 支持注册自定义通知渠道
+- **邮件 (Mail)**: 使用 Symfony Mailer 发送邮件。
+- **数据库 (Database)**: 将通知存储到数据库。
+- **自定义渠道**: 支持注册任意自定义通知渠道。
 
 ## 环境要求
 
-- PHP >= 8.2
-- Hyperf >= 3.1.0
-- MySQL/PostgreSQL/SQLite
+- PHP >= 8.1
+- Hyperf >= 3.0
 
 ## 安装
 
@@ -34,11 +30,12 @@
 composer require apffth/hyperf-notification
 ```
 
-### 2. 发布配置文件
+### 2. 发布配置文件和迁移
 
 ```bash
 php bin/hyperf.php vendor:publish apffth/hyperf-notification
 ```
+该命令会发布 `notification.php`, `mail.php`, `twig.php` 配置文件以及数据库迁移文件。
 
 ### 3. 运行数据库迁移
 
@@ -46,121 +43,33 @@ php bin/hyperf.php vendor:publish apffth/hyperf-notification
 php bin/hyperf.php migrate
 ```
 
-## 配置
-
-### 基础配置
-
-配置文件位于 `config/autoload/notification.php`：
-
-```php
-return [
-    'queue' => [
-        'queue' => env('NOTIFICATION_QUEUE', 'notification'),
-        'delay' => (int) env('NOTIFICATION_QUEUE_DELAY', 0),
-        'tries' => (int) env('NOTIFICATION_QUEUE_TRIES', 3),
-    ],
-    
-    'events' => [
-        'enabled' => env('NOTIFICATION_EVENTS_ENABLED', true),
-        'enable_sending_event' => env('NOTIFICATION_ENABLE_SENDING_EVENT', true),
-        'enable_sent_event' => env('NOTIFICATION_ENABLE_SENT_EVENT', true),
-        'enable_failed_event' => env('NOTIFICATION_ENABLE_FAILED_EVENT', true),
-        'log_events' => env('NOTIFICATION_LOG_EVENTS', true),
-    ],
-    
-    'channels' => [
-        'mail' => [
-            'driver' => 'mail',
-            'from' => [
-                'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-                'name' => env('MAIL_FROM_NAME', 'Example'),
-            ],
-        ],
-        'database' => [
-            'driver' => 'database',
-            'table' => 'notifications',
-        ],
-        'broadcast' => [
-            'driver' => 'broadcast',
-            'connection' => env('BROADCAST_CONNECTION', 'redis'),
-        ],
-    ],
-];
-```
-
-### 邮件配置
-
-在 `config/autoload/mail.php` 中配置邮件服务：
-
-```php
-return [
-    'default_mailer' => env('MAIL_MAILER', 'smtp'),
-    
-    'mailers' => [
-        'smtp' => [
-            'host' => env('MAIL_HOST', 'smtp.mailgun.org'),
-            'port' => env('MAIL_PORT', 587),
-            'encryption' => env('MAIL_ENCRYPTION', 'tls'),
-            'username' => env('MAIL_USERNAME'),
-            'password' => env('MAIL_PASSWORD'),
-        ],
-    ],
-    
-    'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
-        'name' => env('MAIL_FROM_NAME', 'Example'),
-    ],
-];
-```
-
-### Twig 配置
-
-配置文件位于 `config/autoload/twig.php`：
-
-```php
-return [
-    'paths' => [
-        BASE_PATH . '/storage/emails',
-    ],
-    
-    'options' => [
-        'debug' => env('APP_DEBUG', false),
-        'cache' => env('TWIG_CACHE', true),
-        'cache_path' => BASE_PATH . '/runtime/twig/cache',
-        'auto_reload' => env('TWIG_AUTO_RELOAD', true),
-        'strict_variables' => true,
-        'charset' => 'UTF-8',
-        'timezone' => env('APP_TIMEZONE', 'Asia/Taipei'),
-    ],
-    
-    'globals' => [
-        'app_name' => env('APP_NAME', 'Hyperf App'),
-    ],
-];
-```
-
 ## 使用方法
 
 ### 1. 创建通知类
 
+使用 `gen:notification` 命令可以快速生成一个通知类。
+
+```bash
+php bin/hyperf.php gen:notification WelcomeNotification
+```
+
+通知类定义了通知的发送逻辑和内容。
+
 ```php
 <?php
-
-namespace App\Notifications;
+// app/Notification/WelcomeNotification.php
+namespace App\Notification;
 
 use Apffth\Hyperf\Notification\Notification;
+use Apffth\Hyperf\Notification\Queueable;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 
 class WelcomeNotification extends Notification
 {
-    public function __construct(
-        protected string $userName,
-        protected string $welcomeMessage = '欢迎加入我们！'
-    ) {
-    }
+    use Queueable; // 使通知可以被队列化
 
     /**
-     * 获取通知应该发送的渠道
+     * 定义通知将通过哪些渠道发送
      */
     public function via($notifiable): array
     {
@@ -168,13 +77,13 @@ class WelcomeNotification extends Notification
     }
 
     /**
-     * 获取通知的邮件表示
+     * 定义通知的邮件内容
      */
     public function toMail($notifiable): TemplatedEmail
     {
         $email = new TemplatedEmail();
         $email->subject('欢迎 ' . $this->userName)
-            ->htmlTemplate('welcome.html.twig')
+            ->htmlTemplate('emails/welcome.html.twig')
             ->context([
                 'userName' => $this->userName,
                 'message' => $this->welcomeMessage,
@@ -184,15 +93,13 @@ class WelcomeNotification extends Notification
     }
 
     /**
-     * 获取通知的数据库表示
+     * 定义通知的数据库存储内容
      */
     public function toDatabase($notifiable): array
     {
         return [
-            'message' => $this->welcomeMessage,
-            'user_name' => $this->userName,
-            'type' => 'welcome',
-            'created_at' => date('Y-m-d H:i:s'),
+            'message' => '一位新用户已注册。',
+            'user_id' => $notifiable->getKey(), // 使用 getKey() 更安全
         ];
     }
 
@@ -200,33 +107,23 @@ class WelcomeNotification extends Notification
      * 通知发送完成后的回调方法
      */
     public function afterSend(mixed $response, string $channel, mixed $notifiable): void
-    {
-        // 获取所有渠道的返回值
-        $responses = $this->getChannelResponses();
-        
+    {       
         // 处理邮件渠道的返回值
-        if ($this->hasChannelResponse('mail')) {
-            $mailResponse = $this->getChannelResponse('mail');
-            // 处理邮件发送结果
-        }
-
-        // 处理数据库渠道的返回值
-        if ($this->hasChannelResponse('database')) {
-            $dbResponse = $this->getChannelResponse('database');
-            // 处理数据库存储结果
+        if ($channel == 'mail') {
+            // 处理邮件发送结果 $response
         }
     }
 }
 ```
 
-### 2. 在模型中使用 Notifiable trait
+### 2. 在模型中使用 Notifiable Trait
 
-在你的模型类中使用 `Notifiable` trait：
+在需要接收通知的模型（例如 `User` 模型）中使用 `Notifiable` trait。
 
 ```php
 <?php
-
-namespace App\Models;
+// app/Model/User.php
+namespace App\Model;
 
 use Apffth\Hyperf\Notification\Notifiable;
 use Hyperf\DbConnection\Model\Model;
@@ -234,212 +131,188 @@ use Hyperf\DbConnection\Model\Model;
 class User extends Model
 {
     use Notifiable;
-
-    /**
-     * 为邮件渠道定义路由
-     */
-    public function routeNotificationForMail(): ?string
-    {
-        return $this->email;
-    }
+    
+    // ... 模型其他部分
 }
 ```
+`Notifiable` trait 提供了发送通知和管理数据库通知的核心功能。它由 `RoutesNotifications` 和 `HasDatabaseNotifications` 两个更小的 trait 组成，您可以根据需要单独使用它们。
 
 ### 3. 发送通知
 
-默认情况下，所有通知都会被推送到队列中异步处理。
+您可以通过两种方式发送通知：
+
+**a) 使用模型上的 `notify` 方法 (推荐)**
+
+这是最常用、最便捷的方式。
 
 ```php
-use App\Notifications\WelcomeNotification;
+use App\Model\User;
+use App\Notification\WelcomeNotification;
 
-// 发送通知
 $user = User::find(1);
-$notification = new WelcomeNotification('张三', '欢迎使用我们的系统！');
-
-// 此操作会将通知推送到队列
-$user->notify($notification);
+$user->notify(new WelcomeNotification());
 ```
 
-#### 同步发送通知
+**b) 使用 `NotificationSender` 服务**
 
-如果你需要立即发送通知（不使用队列），可以使用 `NotificationSender::sendNow()` 方法：
+您也可以通过依赖注入直接使用 `NotificationSender` 服务来发送通知。
 
 ```php
 use Apffth\Hyperf\Notification\NotificationSender;
-use App\Notifications\WelcomeNotification;
+use App\Model\User;
+use App\Notification\WelcomeNotification;
 
-// 发送通知
-$user = User::find(1);
-$notification = new WelcomeNotification('张三', '欢迎使用我们的系统！');
-
-// 此操作会立即发送通知
-NotificationSender::sendNow($user, $notification);
-```
-
-或者，你可以在通知类中重写 `shouldQueue()` 方法使其默认同步发送：
-
-```php
-class WelcomeNotification extends Notification
+class SomeService
 {
-    // ...
-
-    public function shouldQueue($notifiable): bool
+    public function __construct(private NotificationSender $sender) {}
+    
+    public function doSomething()
     {
-        return false; // 返回 false 以禁用队列
+        $user = User::find(1);
+        $this->sender->send($user, new WelcomeNotification());
     }
 }
 ```
 
-### 4. 队列化通知配置
+### 4. 队列化通知
 
-所有通知类都默认使用了 `Queueable` trait，让你可以方便地配置队列行为。
-
-#### 在发送时指定队列选项
-
-你可以在发送通知前，通过链式调用动态配置队列选项：
+如果通知类中使用了 `Queueable` trait，通知将自动被推送到队列中异步处理。您可以通过链式调用来动态配置队列属性。
 
 ```php
-$notification = new WelcomeNotification('张三', '欢迎使用我们的系统！');
-
-// 动态配置
-$notification->onQueue('high-priority')
-             ->delay(10) // 延迟10秒
-             ->tries(5);
+$notification = (new WelcomeNotification())
+                    ->onQueue('emails') // 指定队列
+                    ->delay(60);        // 延迟60秒
 
 $user->notify($notification);
 ```
 
-#### 在通知类中配置队列选项
-
-为了给某个通知类设置固定的队列选项，你可以在它的构造函数中进行配置：
+若要同步发送（不使用队列），可以在通知类中重写 `shouldQueue()` 方法使其返回 `false`。
 
 ```php
-class WelcomeNotification extends Notification
+public function shouldQueue($notifiable): bool
 {
-    public function __construct(
-        protected string $userName,
-        protected string $welcomeMessage = '欢迎加入我们！'
-    ) {
-        // 设置默认队列选项
-        $this->onQueue('notifications')
-             ->delay(60) // 默认延迟60秒
-             ->tries(3);
-    }
-    
-    // ... via(), toMail(), etc.
+    return false;
 }
 ```
 
 ## 事件系统
 
-### 注册事件监听器
+本组件与 Hyperf 原生的事件系统完全集成。您可以创建标准的事件监听器来监听通知的生命周期事件。
 
-```php
-use Apffth\Hyperf\Notification\NotificationSender;
-use Apffth\Hyperf\Notification\Events\NotificationSending;
-use Apffth\Hyperf\Notification\Events\NotificationSent;
-use Apffth\Hyperf\Notification\Events\NotificationFailed;
+支持的事件包括：
+- `Apffth\Hyperf\Notification\Events\NotificationSending` (发送前)
+- `Apffth\Hyperf\Notification\Events\NotificationSent` (发送后)
+- `Apffth\Hyperf\Notification\Events\NotificationFailed` (发送失败)
 
-// 发送前事件
-NotificationSender::listen('notification.sending', function (NotificationSending $event) {
-    echo "通知发送前: {$event->getChannel()}\n";
-    
-    // 根据条件阻止发送
-    if ($event->getChannel() === 'mail' && $this->isMaintenanceMode()) {
-        $event->preventSending();
-    }
-});
+### 创建事件监听器
 
-// 发送后事件
-NotificationSender::listen('notification.sent', function (NotificationSent $event) {
-    echo "通知发送成功: {$event->getChannel()}\n";
-    echo "发送时间: " . $event->getSentAt()->format('Y-m-d H:i:s') . "\n";
-});
+使用 `gen:listener` 命令创建一个监听器。
 
-// 失败事件
-NotificationSender::listen('notification.failed', function (NotificationFailed $event) {
-    echo "通知发送失败: {$event->getChannel()}\n";
-    echo "错误信息: " . $event->getErrorMessage() . "\n";
-});
+```bash
+php bin/hyperf.php gen:listener LogNotificationStatus
 ```
 
-### 基于类的事件监听器
+### 编写监听器逻辑
+
+在监听器中，使用 `#[Listener]` 注解，并在 `listen()` 方法中返回您想监听的事件类。
 
 ```php
 <?php
-
-namespace App\Listeners;
+// app/Listener/LogNotificationStatus.php
+namespace App\Listener;
 
 use Apffth\Hyperf\Notification\Events\NotificationSent;
-use Hyperf\Logger\LoggerFactory;
+use Hyperf\Event\Annotation\Listener;
+use Hyperf\Event\Contract\ListenerInterface;
+use Psr\Log\LoggerInterface;
 
-class LogNotificationSent
+#[Listener]
+class LogNotificationStatus implements ListenerInterface
 {
-    public function __construct(private LoggerFactory $loggerFactory) {}
+    private LoggerInterface $logger;
 
-    public function handle(NotificationSent $event): void
+    public function __construct(\Hyperf\Logger\LoggerFactory $loggerFactory)
     {
-        $logger = $this->loggerFactory->get('notification');
-        
-        $logger->info('通知发送成功', [
-            'channel' => $event->getChannel(),
-            'notification' => get_class($event->getNotification()),
-            'notifiable' => get_class($event->getNotifiable()),
-            'sent_at' => $event->getSentAt()->format('Y-m-d H:i:s'),
-        ]);
+        $this->logger = $loggerFactory->get('notification');
+    }
+
+    public function listen(): array
+    {
+        return [
+            NotificationSent::class,
+        ];
+    }
+
+    public function process(object $event): void
+    {
+        if ($event instanceof NotificationSent) {
+            $this->logger->info(sprintf(
+                'Notification sent to %s via %s.',
+                get_class($event->getNotifiable()),
+                $event->getChannel()
+            ));
+        }
     }
 }
 ```
+Hyperf 会自动发现并注册这个监听器。
 
 ## 自定义渠道
 
-### 创建自定义渠道
+### 1. 创建渠道类
+
+您的自定义渠道类需要实现 `Apffth\Hyperf\Notification\Channels\ChannelInterface` 接口。
 
 ```php
 <?php
-
 namespace App\Channels;
 
 use Apffth\Hyperf\Notification\Channels\ChannelInterface;
 use Apffth\Hyperf\Notification\Notification;
 
-class SlackChannel implements ChannelInterface
+class SmsChannel implements ChannelInterface
 {
     public function send($notifiable, Notification $notification): mixed
     {
-        $data = $notification->toSlack($notifiable);
-        
-        // 实现 Slack 发送逻辑
-        $response = $this->sendToSlack($data);
-        
-        return [
-            'success' => $response['ok'] ?? false,
-            'channel' => $data['channel'] ?? 'general',
-            'message' => $data['text'] ?? '',
-            'sent_at' => date('Y-m-d H:i:s'),
-        ];
-    }
-    
-    protected function sendToSlack(array $data): array
-    {
-        // 实现具体的 Slack API 调用
-        return ['ok' => true];
+        $message = $notification->toSms($notifiable); // 您需要在通知类中添加 toSms 方法
+        // ... 实现发送短信的逻辑
+        return ['success' => true];
     }
 }
 ```
 
-### 注册自定义渠道
+### 2. 注册自定义渠道
+
+推荐在一个自定义的 `BootProcess` 中，获取 `ChannelManager` 实例并注册您的渠道。
 
 ```php
-use Apffth\Hyperf\Notification\NotificationSender;
-use App\Channels\SlackChannel;
+<?php
+// app/Process/NotificationSetupProcess.php
+namespace App\Process;
 
-// 注册渠道类
-NotificationSender::registerChannel('slack', SlackChannel::class);
+use Apffth\Hyperf\Notification\ChannelManager;
+use App\Channels\SmsChannel;
+use Hyperf\Process\AbstractProcess;
+use Psr\Container\ContainerInterface;
 
-// 或者注册渠道实例
-NotificationSender::registerChannelInstance('slack', new SlackChannel());
+class NotificationSetupProcess extends AbstractProcess
+{
+    public function handle(): void
+    {
+        $channelManager = $this->container->get(ChannelManager::class);
+        
+        // 注册渠道，'sms' 是您在 via() 中使用的名称
+        $channelManager->register('sms', SmsChannel::class);
+    }
+
+    public function isEnable($server): bool
+    {
+        // 确保此进程在服务启动时运行
+        return true;
+    }
+}
 ```
+最后，不要忘记在 `config/autoload/processes.php` 中添加您的 `NotificationSetupProcess`。
 
 ## 邮件模板
 
@@ -492,10 +365,10 @@ public function toMail($notifiable): TemplatedEmail
 
 ## 数据库通知
 
-### 查询通知
+使用 `HasDatabaseNotifications` trait (已包含在 `Notifiable` 中) 会为您的模型提供便捷的数据库通知管理方法。
 
 ```php
-use Apffth\Hyperf\Notification\Models\Notification;
+$user = User::find(1);
 
 // 获取用户的所有通知
 $notifications = $user->notifications;
@@ -503,171 +376,26 @@ $notifications = $user->notifications;
 // 获取未读通知
 $unreadNotifications = $user->unreadNotifications;
 
-// 获取已读通知
-$readNotifications = $user->readNotifications;
-
 // 标记所有通知为已读
 $user->markNotificationsAsRead();
-
-// 删除所有通知
-$user->deleteNotifications();
-
-// 标记单个通知为已读
-$notification = Notification::find($id);
-$notification->markAsRead();
-```
-
-### 在模型中添加通知关系
-
-```php
-class User extends Model
-{
-    use Notifiable;
-
-    /**
-     * 获取用户的通知
-     */
-    public function notifications()
-    {
-        return $this->morphMany(Notification::class, 'notifiable')->orderBy('created_at', 'desc');
-    }
-
-    /**
-     * 获取未读通知
-     */
-    public function unreadNotifications()
-    {
-        return $this->notifications()->whereNull('read_at');
-    }
-}
-```
-
-## 渠道响应处理
-
-### 获取渠道响应
-
-```php
-class WelcomeNotification extends Notification
-{
-    public function afterSend(mixed $response, string $channel, mixed $notifiable): void
-    {
-        // 获取所有渠道的返回值
-        $responses = $this->getChannelResponses();
-        
-        // 获取指定渠道的返回值
-        $mailResponse = $this->getChannelResponse('mail');
-        $dbResponse = $this->getChannelResponse('database');
-        
-        // 检查是否有指定渠道的返回值
-        if ($this->hasChannelResponse('mail')) {
-            // 处理邮件响应
-        }
-        
-        // 获取第一个渠道的返回值
-        $firstResponse = $this->getFirstChannelResponse();
-        
-        // 检查是否所有渠道都发送成功
-        $allSuccessful = $this->allChannelsSuccessful();
-    }
-}
 ```
 
 ## 测试
 
-### 单元测试
+在测试时，您可以通过依赖注入来模拟 `Apffth\Hyperf\Notification\NotificationSender` 或具体的渠道类，以防止发送真实的通知。
 
 ```php
-<?php
+// 在您的测试用例中
+use Apffth\Hyperf\Notification\NotificationSender;
+use Mockery;
 
-namespace Tests;
+// ...
+$senderMock = Mockery::mock(NotificationSender::class);
+$senderMock->shouldReceive('send')->once();
 
-use App\Notifications\WelcomeNotification;
-use App\Models\User;
-use Hyperf\Testing\TestCase;
+$this->container->set(NotificationSender::class, $senderMock);
 
-class NotificationTest extends TestCase
-{
-    public function testWelcomeNotification()
-    {
-        $user = new User(['email' => 'test@example.com']);
-        $notification = new WelcomeNotification('测试用户');
-        
-        // 发送通知
-        $user->notify($notification);
-        
-        // 验证通知发送结果
-        $this->assertTrue($notification->allChannelsSuccessful());
-        
-        // 验证邮件渠道响应
-        $mailResponse = $notification->getChannelResponse('mail');
-        $this->assertTrue($mailResponse['success']);
-    }
-}
-```
-
-## 常见问题
-
-### Q: 如何禁用队列处理？
-
-A: 默认所有通知都会进入队列。要同步发送，可以在通知类中重写 `shouldQueue()` 方法并返回 `false`，或者直接使用 `NotificationSender::sendNow()` 方法。
-
-### Q: 如何自定义通知 ID？
-
-A: 在通知类中重写 `setId` 方法：
-
-```php
-public function setId(): void
-{
-    $this->id = 'custom-' . uniqid();
-}
-```
-
-### Q: 如何添加新的通知渠道？
-
-A: 实现 `ChannelInterface` 接口，然后注册渠道：
-
-```php
-class CustomChannel implements ChannelInterface
-{
-    public function send($notifiable, Notification $notification): mixed
-    {
-        // 实现发送逻辑
-        return ['success' => true];
-    }
-}
-
-NotificationSender::registerChannel('custom', CustomChannel::class);
-```
-
-### Q: 如何配置邮件模板路径？
-
-A: 在 `config/autoload/twig.php` 中配置模板路径：
-
-```php
-'paths' => [
-    BASE_PATH . '/storage/emails',  // 邮件模板路径
-    BASE_PATH . '/templates',       // 其他模板路径
-],
-```
-
-### Q: 如何启用队列处理？
-
-A: 在通知类中使用 `Queueable` trait 并实现队列配置：
-
-```php
-use Apffth\Hyperf\Notification\Queueable;
-
-class WelcomeNotification extends Notification
-{
-    use Queueable;
-
-    public function __construct()
-    {
-        $this->onQueue('notifications')
-             ->delay(60)
-             ->tries(3);
-    }
-}
+// 执行您的业务逻辑...
 ```
 
 ## 许可证
