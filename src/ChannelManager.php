@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Apffth\Hyperf\Notification;
 
-use Apffth\Hyperf\Notification\Channels\BroadcastChannel;
 use Apffth\Hyperf\Notification\Channels\ChannelInterface;
 use Apffth\Hyperf\Notification\Channels\DatabaseChannel;
 use Apffth\Hyperf\Notification\Channels\MailChannel;
@@ -24,7 +23,6 @@ class ChannelManager
     protected array $defaultChannels = [
         'mail'      => MailChannel::class,
         'database'  => DatabaseChannel::class,
-        'broadcast' => BroadcastChannel::class,
     ];
 
     public function __construct()

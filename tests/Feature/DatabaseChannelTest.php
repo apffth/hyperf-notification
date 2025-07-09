@@ -5,31 +5,34 @@ declare(strict_types=1);
 namespace Apffth\Hyperf\Notification\Tests\Feature;
 
 use Apffth\Hyperf\Notification\Channels\DatabaseChannel;
-use Apffth\Hyperf\Notification\Models\Notification as NotificationModel;
+use Apffth\Hyperf\Notification\Notification;
 use Apffth\Hyperf\Notification\Tests\stubs\TestNotification;
 use Apffth\Hyperf\Notification\Tests\stubs\User;
 use Apffth\Hyperf\Notification\Tests\TestCase;
-use Hyperf\Database\Model\Model;
-use Mockery;
+use Hyperf\DbConnection\Db;
 
 class DatabaseChannelTest extends TestCase
 {
-    protected function setUp(): void
+    protected function tearDown(): void
     {
-        parent::setUp();
-        Model::unsetConnectionResolver();
+        Db::table('notifications')->truncate();
+        parent::tearDown();
     }
 
     public function testItCanSendADatabaseNotification()
     {
-        $user = new User();
+        $user         = new User(['id' => 1, 'email' => 'test@example.com']);
         $notification = new TestNotification();
 
         $channel = $this->getContainer()->get(DatabaseChannel::class);
-        $result = $channel->send($user, $notification);
+        $channel->send($user, $notification);
 
-        $this->assertIsArray($result);
-        $this->assertTrue($result['success']);
-        $this->assertArrayHasKey('notification_id', $result);
+        $exists = Db::table('notifications')->where([
+            'notifiable_id'   => $user->getKey(),
+            'notifiable_type' => $user->getMorphClass(),
+            'type'            => get_class($notification),
+        ])->exists();
+
+        $this->assertTrue($exists);
     }
 } 
