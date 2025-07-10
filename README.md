@@ -47,7 +47,7 @@ php bin/hyperf.php migrate
 
 ### 1. 创建通知类
 
-使用 `gen:notification` 命令可以快速生成一个通知类。
+使用 `gen:notification` 命令可以快速生成一个通知类。（暂示支持命令式创建通知类）
 
 ```bash
 php bin/hyperf.php gen:notification WelcomeNotification
@@ -283,36 +283,41 @@ class SmsChannel implements ChannelInterface
 
 ### 2. 注册自定义渠道
 
-推荐在一个自定义的 `BootProcess` 中，获取 `ChannelManager` 实例并注册您的渠道。
+推荐在 app/Bootstrap 目录下创建 NotificationBootstrap 监听服务启动并注册您的渠道。
 
 ```php
 <?php
-// app/Process/NotificationSetupProcess.php
-namespace App\Process;
+
+declare(strict_types=1);
+
+namespace App\Bootstrap;
 
 use Apffth\Hyperf\Notification\ChannelManager;
-use App\Channels\SmsChannel;
-use Hyperf\Process\AbstractProcess;
-use Psr\Container\ContainerInterface;
+use App\Notification\Channels\SmsChannel;
+use Hyperf\Contract\ContainerInterface;
+use Hyperf\Event\Annotation\Listener;
+use Hyperf\Event\Contract\ListenerInterface;
+use Hyperf\Framework\Event\BootApplication;
 
-class NotificationSetupProcess extends AbstractProcess
+#[Listener]
+class NotificationBootstrap implements ListenerInterface
 {
-    public function handle(): void
+    public function __construct(protected ContainerInterface $container) {}
+
+    public function listen(): array
     {
-        $channelManager = $this->container->get(ChannelManager::class);
-        
-        // 注册渠道，'sms' 是您在 via() 中使用的名称
-        $channelManager->register('sms', SmsChannel::class);
+        return [
+            BootApplication::class,
+        ];
     }
 
-    public function isEnable($server): bool
+    public function process(object $event): void
     {
-        // 确保此进程在服务启动时运行
-        return true;
+        $channelManager = $this->container->get(ChannelManager::class);
+        $channelManager->register('sms', SmsChannel::class);
     }
 }
 ```
-最后，不要忘记在 `config/autoload/processes.php` 中添加您的 `NotificationSetupProcess`。
 
 ## 邮件模板
 
