@@ -3,22 +3,33 @@
 namespace Examples;
 
 use Apffth\Hyperf\Notification\NotificationSender;
+use Apffth\Hyperf\Notification\EventDispatcher;
 use Apffth\Hyperf\Notification\Events\NotificationSending;
 use Apffth\Hyperf\Notification\Events\NotificationSent;
 use Apffth\Hyperf\Notification\Events\NotificationFailed;
 use Examples\EventListeners\LogNotificationSending;
 use Examples\EventListeners\LogNotificationSent;
 use Examples\EventListeners\LogNotificationFailed;
+use Psr\Container\ContainerInterface;
 
 /**
  * 事件使用示例
  */
 class EventUsageExample
 {
+    protected EventDispatcher $eventDispatcher;
+    protected ContainerInterface $container;
+
+    public function __construct(ContainerInterface $container)
+    {
+        $this->container = $container;
+        $this->eventDispatcher = $container->get(EventDispatcher::class);
+    }
+
     public function setupEventListeners(): void
     {
         // 注册事件监听器
-        NotificationSender::listen('notification.sending', function (NotificationSending $event) {
+        $this->eventDispatcher->listen('notification.sending', function (NotificationSending $event) {
             echo "通知发送前事件: {$event->getChannel()}\n";
             
             // 示例：根据条件阻止发送
@@ -28,13 +39,13 @@ class EventUsageExample
             }
         });
 
-        NotificationSender::listen('notification.sent', function (NotificationSent $event) {
+        $this->eventDispatcher->listen('notification.sent', function (NotificationSent $event) {
             echo "通知发送后事件: {$event->getChannel()}\n";
             echo "发送成功: " . ($event->wasSuccessful() ? '是' : '否') . "\n";
             echo "发送时间: " . $event->getSentAt()->format('Y-m-d H:i:s') . "\n";
         });
 
-        NotificationSender::listen('notification.failed', function (NotificationFailed $event) {
+        $this->eventDispatcher->listen('notification.failed', function (NotificationFailed $event) {
             echo "通知失败事件: {$event->getChannel()}\n";
             echo "错误信息: " . $event->getErrorMessage() . "\n";
             echo "错误代码: " . $event->getErrorCode() . "\n";
@@ -45,20 +56,18 @@ class EventUsageExample
     public function setupClassBasedListeners(): void
     {
         // 使用基于类的事件监听器
-        $container = \Hyperf\Context\ApplicationContext::getContainer();
-        
-        NotificationSender::listen('notification.sending', function (NotificationSending $event) use ($container) {
-            $listener = new LogNotificationSending($container);
+        $this->eventDispatcher->listen('notification.sending', function (NotificationSending $event) {
+            $listener = new LogNotificationSending($this->container);
             $listener->handle($event);
         });
 
-        NotificationSender::listen('notification.sent', function (NotificationSent $event) use ($container) {
-            $listener = new LogNotificationSent($container);
+        $this->eventDispatcher->listen('notification.sent', function (NotificationSent $event) {
+            $listener = new LogNotificationSent($this->container);
             $listener->handle($event);
         });
 
-        NotificationSender::listen('notification.failed', function (NotificationFailed $event) use ($container) {
-            $listener = new LogNotificationFailed($container);
+        $this->eventDispatcher->listen('notification.failed', function (NotificationFailed $event) {
+            $listener = new LogNotificationFailed($this->container);
             $listener->handle($event);
         });
     }
@@ -66,7 +75,7 @@ class EventUsageExample
     public function conditionalSendingExample(): void
     {
         // 条件发送示例
-        NotificationSender::listen('notification.sending', function (NotificationSending $event) {
+        $this->eventDispatcher->listen('notification.sending', function (NotificationSending $event) {
             $notifiable = $event->getNotifiable();
             $notification = $event->getNotification();
             
@@ -93,7 +102,7 @@ class EventUsageExample
     public function postSendingActionsExample(): void
     {
         // 发送后操作示例
-        NotificationSender::listen('notification.sent', function (NotificationSent $event) {
+        $this->eventDispatcher->listen('notification.sent', function (NotificationSent $event) {
             if ($event->wasSuccessful()) {
                 // 更新用户通知统计
                 $notifiable = $event->getNotifiable();
@@ -113,7 +122,7 @@ class EventUsageExample
     public function failureHandlingExample(): void
     {
         // 失败处理示例
-        NotificationSender::listen('notification.failed', function (NotificationFailed $event) {
+        $this->eventDispatcher->listen('notification.failed', function (NotificationFailed $event) {
             // 记录失败日志
             $this->logFailure($event);
             

@@ -74,7 +74,7 @@ class TestCase extends BaseTestCase
         $container->set(ConfigInterface::class, $config);
         $container->set(LoggerInterface::class, new NullLogger());
         $container->set(EventDispatcherInterface::class, new EventDispatcher($container, true));
-        $container->set(ChannelManager::class, new ChannelManager($container));
+        $container->set(ChannelManager::class, new ChannelManager());
         $container->set(TwigServiceProvider::class, new TwigServiceProvider());
 
         return $container;
@@ -83,5 +83,14 @@ class TestCase extends BaseTestCase
     protected function getContainer(): ContainerInterface
     {
         return $this->container;
+    }
+
+    /**
+     * 设置配置值用于测试
+     */
+    protected function setConfig(string $key, mixed $value): void
+    {
+        $config = $this->container->get(ConfigInterface::class);
+        $config->set($key, $value);
     }
 } 

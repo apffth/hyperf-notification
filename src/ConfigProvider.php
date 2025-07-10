@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Apffth\Hyperf\Notification;
 
 use Apffth\Hyperf\Notification\Contracts\EventDispatcherInterface;
-use Symfony\Component\Mailer\MailerInterface;
 
 class ConfigProvider
 {
@@ -16,7 +15,6 @@ class ConfigProvider
         return [
             'dependencies' => [
                 EventDispatcherInterface::class => EventDispatcher::class,
-                MailerInterface::class          => MailerFactory::class,
             ],
             'publish'      => [
                 [

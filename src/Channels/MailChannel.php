@@ -8,15 +8,15 @@ use Apffth\Hyperf\Notification\Exceptions\NotificationException;
 use Apffth\Hyperf\Notification\Notification;
 use Apffth\Hyperf\Notification\TwigServiceProvider;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
-use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
 use Symfony\Component\Mime\Address;
 
 use function Hyperf\Config\config;
-use function Hyperf\Coroutine\run;
 
 class MailChannel implements ChannelInterface
 {
-    public function __construct(protected TwigServiceProvider $twigServiceProvider, protected MailerInterface $mailer) {}
+    public function __construct(protected TwigServiceProvider $twigServiceProvider) {}
 
     public function send($notifiable, Notification $notification): mixed
     {
@@ -35,13 +35,7 @@ class MailChannel implements ChannelInterface
         $email->from(new Address(config('mail.from.address'), config('mail.from.name')))
             ->to(new Address($toAddress));
 
-        if ($notification->shouldQueue($notifiable)) {
-            $this->mailer->send($email);
-        } else {
-            run(function () use ($email) {
-                $this->mailer->send($email);
-            });
-        }
+        $this->getMailer()->send($email);
 
         return [
             'success' => true,
@@ -67,5 +61,31 @@ class MailChannel implements ChannelInterface
         }
 
         return $notifiable->email ?? null;
+    }
+
+    private function getMailer(): Mailer
+    {
+        $defaultMailer = config('mail.default_mailer');
+        $mailer        = config('mail.mailers.' . $defaultMailer);
+
+        if (empty($mailer)) {
+            throw new NotificationException(500, 'Mailer configuration not found');
+        }
+
+        $transport = new EsmtpTransport(
+            host: $mailer['host'],
+            port: $mailer['port'],
+            tls: $mailer['encryption'] === 'tls'
+        );
+
+        if (! empty($mailer['username'])) {
+            $transport->setUsername($mailer['username']);
+        }
+
+        if (! empty($mailer['password'])) {
+            $transport->setPassword($mailer['password']);
+        }
+
+        return new Mailer($transport);
     }
 }

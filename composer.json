@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "php": ">=8.2",
+        "php": ">=8.1",
         "hyperf/async-queue": "~3.1.0",
         "hyperf/config": "^3.1",
         "hyperf/constants": "^3.1",
