@@ -2,6 +2,7 @@
     "name": "apffth/hyperf-notification",
     "description": "A notification system for Hyperf framework, compatible with Laravel notifications",
     "type": "library",
+    "version": "1.0.1",
     "license": "MIT",
     "authors": [
         {
