@@ -11,6 +11,7 @@ use Apffth\Hyperf\Notification\Events\NotificationSent;
 use Hyperf\Logger\LoggerFactory;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use ReflectionClass;
 use Throwable;
 
 class EventDispatcher implements EventDispatcherInterface
@@ -46,24 +47,6 @@ class EventDispatcher implements EventDispatcherInterface
     }
 
     /**
-     * 初始化日志实例
-     */
-    protected function initializeLogger(): void
-    {
-        try {
-            // 检查容器中是否有 LoggerFactory
-            if ($this->container->has(LoggerFactory::class)) {
-                $loggerFactory = $this->container->get(LoggerFactory::class);
-                $this->logger = $loggerFactory->get('notification');
-            }
-        } catch (Throwable $e) {
-            // 如果获取 LoggerFactory 失败，记录错误但不影响事件系统运行
-            // 这里可以选择记录到 error_log 或者静默处理
-            error_log('Failed to initialize notification logger: ' . $e->getMessage());
-        }
-    }
-
-    /**
      * 分发通知发送前事件.
      */
     public function dispatchSending(NotificationSending $event): void
@@ -77,11 +60,16 @@ class EventDispatcher implements EventDispatcherInterface
         // 记录日志
         if ($this->logger) {
             try {
-                $this->logger->info('Notification sending', [
+                $notification = $event->getNotification();
+
+                $logData = [
                     'notifiable'   => $this->getNotifiableInfo($event->getNotifiable()),
-                    'notification' => get_class($event->getNotification()),
+                    'notification' => get_class($notification),
                     'channel'      => $event->getChannel(),
-                ]);
+                    'properties'   => $this->getProperties($notification),
+                ];
+
+                $this->logger->info('Notification sending', $logData);
             } catch (Throwable $e) {
                 // 日志记录失败不应影响事件分发
                 error_log('Failed to log notification sending event: ' . $e->getMessage());
@@ -103,10 +91,13 @@ class EventDispatcher implements EventDispatcherInterface
         // 记录日志
         if ($this->logger) {
             try {
+                $notification = $event->getNotification();
+
                 $this->logger->info('Notification sent', [
                     'notifiable'   => $this->getNotifiableInfo($event->getNotifiable()),
-                    'notification' => get_class($event->getNotification()),
+                    'notification' => get_class($notification),
                     'channel'      => $event->getChannel(),
+                    'properties'   => $this->getProperties($notification),
                     'successful'   => $event->wasSuccessful(),
                     'sent_at'      => $event->getSentAt()->format('Y-m-d H:i:s'),
                 ]);
@@ -131,10 +122,13 @@ class EventDispatcher implements EventDispatcherInterface
         // 记录日志
         if ($this->logger) {
             try {
+                $notification = $event->getNotification();
+
                 $this->logger->error('Notification failed', [
                     'notifiable'   => $this->getNotifiableInfo($event->getNotifiable()),
-                    'notification' => get_class($event->getNotification()),
+                    'notification' => get_class($notification),
                     'channel'      => $event->getChannel(),
+                    'properties'   => $this->getProperties($notification),
                     'error'        => $event->getErrorMessage(),
                     'code'         => $event->getErrorCode(),
                     'failed_at'    => $event->getFailedAt()->format('Y-m-d H:i:s'),
@@ -172,7 +166,7 @@ class EventDispatcher implements EventDispatcherInterface
     public function setEnabled(bool $enabled): void
     {
         $this->enabled = $enabled;
-        
+
         // 如果启用事件但日志未初始化，尝试初始化日志
         if ($enabled && $this->logger === null) {
             $this->initializeLogger();
@@ -188,7 +182,7 @@ class EventDispatcher implements EventDispatcherInterface
     }
 
     /**
-     * 获取日志实例
+     * 获取日志实例.
      */
     public function getLogger(): ?LoggerInterface
     {
@@ -196,11 +190,29 @@ class EventDispatcher implements EventDispatcherInterface
     }
 
     /**
-     * 设置日志实例
+     * 设置日志实例.
      */
     public function setLogger(?LoggerInterface $logger): void
     {
         $this->logger = $logger;
+    }
+
+    /**
+     * 初始化日志实例.
+     */
+    protected function initializeLogger(): void
+    {
+        try {
+            // 检查容器中是否有 LoggerFactory
+            if ($this->container->has(LoggerFactory::class)) {
+                $loggerFactory = $this->container->get(LoggerFactory::class);
+                $this->logger  = $loggerFactory->get('notification');
+            }
+        } catch (Throwable $e) {
+            // 如果获取 LoggerFactory 失败，记录错误但不影响事件系统运行
+            // 这里可以选择记录到 error_log 或者静默处理
+            error_log('Failed to initialize notification logger: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -256,5 +268,65 @@ class EventDispatcher implements EventDispatcherInterface
             'type'  => gettype($notifiable),
             'value' => is_scalar($notifiable) ? $notifiable : null,
         ];
+    }
+
+    /**
+     * 获取通知类属性.
+     */
+    protected function getProperties(Notification $notification): array
+    {
+        try {
+            $reflection  = new ReflectionClass($notification);
+
+            $className = $reflection->getName();
+
+            $props = [];
+            foreach ($reflection->getProperties() as $prop) {
+                if ($prop->getDeclaringClass()->getName() !== $className) {
+                    continue;
+                }
+
+                $prop->setAccessible(true);
+
+                $value = $prop->getValue($notification);
+                if (is_object($value)) {
+                    continue;
+                }
+
+                $props[$prop->getName()] = $this->sanitizeValue($value);
+            }
+
+            return $props;
+        } catch (Throwable $e) {
+            // 如果获取属性失败，返回空数组
+            return [];
+        }
+    }
+
+    /**
+     * 清理敏感数据.
+     * @param mixed $value
+     */
+    protected function sanitizeValue($value): mixed
+    {
+        if (is_string($value)) {
+            // 检查是否包含敏感信息
+            $sensitivePatterns = [
+                '/password/i',
+                '/token/i',
+                '/secret/i',
+                '/key/i',
+                '/api_key/i',
+                '/private_key/i',
+            ];
+
+            foreach ($sensitivePatterns as $pattern) {
+                if (preg_match($pattern, $value)) {
+                    return '[SENSITIVE_DATA]';
+                }
+            }
+        }
+
+        return $value;
     }
 }
