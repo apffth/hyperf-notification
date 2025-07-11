@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -32,21 +35,19 @@ jobs:
       run: vendor/bin/php-cs-fixer fix --dry-run --diff
     
     - name: Create Release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
+        tag_name: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
         body: |
-          ## 🎉 Release ${{ github.ref }}
+          ## 🎉 Release ${{ github.ref_name }}
           
           ### 📋 Changes in this Release:
           - ${{ github.event.head_commit.message }}
           
           ### 📦 Installation:
           ```bash
-          composer require apffth/hyperf-notification:${{ github.ref }}
+          composer require apffth/hyperf-notification:${{ github.ref_name }}
           ```
           
           ### 🔗 Links:
@@ -55,8 +56,10 @@ jobs:
           - [Issues](https://github.com/apffth/hyperf-notification/issues)
         draft: false
         prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Update CHANGELOG
       run: |
-        echo "Release ${{ github.ref }} has been created successfully!"
+        echo "Release ${{ github.ref_name }} has been created successfully!"
         echo "Please update the CHANGELOG.md file with detailed release notes." 
