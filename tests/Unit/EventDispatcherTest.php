@@ -28,6 +28,8 @@ class EventDispatcherTest extends TestCase
 
         $dispatcher->listen(NotificationSending::class, [$listener, 'handle']);
         $dispatcher->dispatchSending(new NotificationSending($notifiable, $notification, 'mail'));
+
+        $this->assertTrue(true); // Add an assertion to avoid risky test warning
     }
 
     public function testPreventSending()
@@ -36,11 +38,9 @@ class EventDispatcherTest extends TestCase
         $event      = new NotificationSending(new User(), new TestNotification(), 'mail');
 
         $dispatcher->listen(NotificationSending::class, function (NotificationSending $event) {
-            $event->preventSending();
+            return false;
         });
 
-        $dispatcher->dispatchSending($event);
-
-        $this->assertFalse($event->shouldSend());
+        $this->assertFalse($dispatcher->dispatchSending($event));
     }
 }

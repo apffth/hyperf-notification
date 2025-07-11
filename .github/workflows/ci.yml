@@ -55,6 +55,9 @@ jobs:
       timeout-minutes: 20
       run: composer update --prefer-dist --no-progress --no-interaction --optimize-autoloader
     
+    - name: Dump optimized autoloader
+      run: composer dump-autoload -o
+
     - name: Create build directory
       run: mkdir -p build/cache build/coverage
     

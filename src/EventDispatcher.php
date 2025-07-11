@@ -49,32 +49,31 @@ class EventDispatcher implements EventDispatcherInterface
     /**
      * 分发通知发送前事件.
      */
-    public function dispatchSending(NotificationSending $event): void
+    public function dispatchSending(NotificationSending $event): bool
     {
         if (! $this->enabled) {
-            return;
+            return true;
         }
 
-        $this->dispatch('notification.sending', $event);
+        $this->dispatch(NotificationSending::class, $event);
 
-        // 记录日志
+        // Log the event
         if ($this->logger) {
             try {
                 $notification = $event->getNotification();
-
-                $logData = [
+                $logData      = [
                     'notifiable'   => $this->getNotifiableInfo($event->getNotifiable()),
                     'notification' => get_class($notification),
                     'channel'      => $event->getChannel(),
                     'properties'   => $this->getProperties($notification),
                 ];
-
                 $this->logger->info('Notification sending', $logData);
             } catch (Throwable $e) {
-                // 日志记录失败不应影响事件分发
                 error_log('Failed to log notification sending event: ' . $e->getMessage());
             }
         }
+
+        return $event->shouldSend();
     }
 
     /**
@@ -226,9 +225,15 @@ class EventDispatcher implements EventDispatcherInterface
         }
 
         foreach ($this->listeners[$event] as $listener) {
+            if (! $payload->shouldSend()) {
+                break;
+            }
             try {
                 if (is_callable($listener)) {
-                    call_user_func($listener, $payload);
+                    $response = call_user_func($listener, $payload);
+                    if ($response === false) {
+                        $payload->preventSending();
+                    }
                 }
             } catch (Throwable $e) {
                 if ($this->logger) {

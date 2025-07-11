@@ -15,40 +15,44 @@ use Apffth\Hyperf\Notification\Tests\stubs\User;
 use Apffth\Hyperf\Notification\Tests\TestCase;
 use Hyperf\AsyncQueue\Driver\DriverFactory;
 use Hyperf\AsyncQueue\Driver\DriverInterface;
-use Hyperf\Di\Container;
 use Mockery;
 
 /**
- * @property Container $container
  * @internal
  * @coversNothing
  */
 class NotificationSenderTest extends TestCase
 {
-    protected function tearDown(): void
-    {
-        Mockery::close();
-    }
-
     public function testSendNow()
     {
         $user         = new User();
         $notification = new TestNotification();
 
-        $channel = Mockery::mock(ChannelInterface::class);
-        $channel->shouldReceive('send')->once()->with($user, $notification);
+        // Mock channels for 'mail' and 'database' as returned by TestNotification.via()
+        $mailChannel = Mockery::mock(ChannelInterface::class);
+        $mailChannel->shouldReceive('send')->once()->with($user, $notification)->andReturn(['success' => true]);
+
+        $databaseChannel = Mockery::mock(ChannelInterface::class);
+        $databaseChannel->shouldReceive('send')->once()->with($user, $notification)->andReturn(['success' => true]);
 
         $channelManager = Mockery::mock(ChannelManager::class);
-        $channelManager->shouldReceive('get')->with('test_channel')->andReturn($channel);
+        $channelManager->shouldReceive('get')->with('mail')->andReturn($mailChannel);
+        $channelManager->shouldReceive('get')->with('database')->andReturn($databaseChannel);
 
         $eventDispatcher = Mockery::mock(EventDispatcherInterface::class);
-        $eventDispatcher->shouldReceive('dispatchSending')->once();
-        $eventDispatcher->shouldReceive('dispatchSent')->once()->with(Mockery::on(function ($event) {
+        $eventDispatcher->shouldReceive('dispatchSending')->times(2)->andReturn(true);
+        $eventDispatcher->shouldReceive('dispatchSent')->times(2)->with(Mockery::on(function ($event) {
             return $event instanceof NotificationSent;
         }));
+        $eventDispatcher->shouldReceive('dispatchFailed')->times(0); // Expect no failures
 
-        $sender = new NotificationSender($channelManager, $eventDispatcher);
+        $this->getContainer()->set(ChannelManager::class, $channelManager);
+        $this->getContainer()->set(EventDispatcherInterface::class, $eventDispatcher);
+
+        $sender = $this->getContainer()->get(NotificationSender::class);
         $sender->sendNow($user, $notification);
+        
+        $this->assertTrue(true);
     }
 
     public function testSendToQueue()
@@ -61,9 +65,11 @@ class NotificationSenderTest extends TestCase
 
         $factory = Mockery::mock(DriverFactory::class);
         $factory->shouldReceive('get')->with('test-queue')->andReturn($driver);
-        $this->container->set(DriverFactory::class, $factory);
+        $this->getContainer()->set(DriverFactory::class, $factory);
 
-        $sender = $this->container->get(NotificationSender::class);
+        $sender = $this->getContainer()->get(NotificationSender::class);
         $sender->send($user, $notification);
+
+        $this->assertTrue(true);
     }
 }

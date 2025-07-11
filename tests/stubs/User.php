@@ -11,13 +11,13 @@ class User extends Model
 {
     use Notifiable;
 
-    protected $fillable = ['id', 'email'];
+    protected array $fillable = ['id', 'email'];
 
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
-        $this->id    = $attributes['id']    ?? 1;
-        $this->email = $attributes['email'] ?? 'test@example.com';
+        $this->id    = $attributes['id'] ?? 1;
+        $this->email = $attributes['email'] ?? null;
     }
 
     public function getKey()
@@ -25,8 +25,12 @@ class User extends Model
         return $this->id;
     }
 
-    public function routeNotificationForMail(): string
+    public function routeNotificationFor($channel): ?string
     {
-        return $this->email;
+        if ($channel === 'mail') {
+            return $this->email;
+        }
+        
+        return null;
     }
 }

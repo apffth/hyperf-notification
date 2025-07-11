@@ -14,7 +14,7 @@ interface EventDispatcherInterface
     /**
      * 分发通知发送前事件.
      */
-    public function dispatchSending(NotificationSending $event): void;
+    public function dispatchSending(NotificationSending $event): bool;
 
     /**
      * 分发通知发送后事件.
