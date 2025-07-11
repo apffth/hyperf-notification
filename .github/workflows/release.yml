@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.1
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, redis, swoole
+    
+    - name: Validate composer.json
+      run: composer validate --strict
+    
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress --no-interaction
+    
+    - name: Run tests
+      run: vendor/bin/phpunit
+    
+    - name: Run code style check
+      run: vendor/bin/php-cs-fixer fix --dry-run --diff
+    
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          ## 🎉 Release ${{ github.ref }}
+          
+          ### 📋 Changes in this Release:
+          - ${{ github.event.head_commit.message }}
+          
+          ### 📦 Installation:
+          ```bash
+          composer require apffth/hyperf-notification:${{ github.ref }}
+          ```
+          
+          ### 🔗 Links:
+          - [Packagist](https://packagist.org/packages/apffth/hyperf-notification)
+          - [Documentation](https://github.com/apffth/hyperf-notification#readme)
+          - [Issues](https://github.com/apffth/hyperf-notification/issues)
+        draft: false
+        prerelease: false
+    
+    - name: Update CHANGELOG
+      run: |
+        echo "Release ${{ github.ref }} has been created successfully!"
+        echo "Please update the CHANGELOG.md file with detailed release notes." 

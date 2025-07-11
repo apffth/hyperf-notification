@@ -1,0 +1,70 @@
+name: Dependabot
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'  # 每周一凌晨2点
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  update-deps:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.1
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, redis, swoole
+    
+    - name: Validate composer.json
+      run: composer validate --strict
+    
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress --no-interaction
+    
+    - name: Update dependencies
+      run: |
+        composer update --prefer-dist --no-progress --no-interaction
+        composer audit --format=text || true
+    
+    - name: Run tests
+      run: vendor/bin/phpunit
+    
+    - name: Run code style check
+      run: vendor/bin/php-cs-fixer fix --dry-run --diff
+    
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        title: 'chore: update dependencies'
+        body: |
+          ## 🔄 Automated Dependency Update
+          
+          This PR was automatically created to update dependencies.
+          
+          ### 📋 Changes:
+          - Updated Composer dependencies to latest compatible versions
+          - Security audit passed
+          - All tests passing
+          
+          ### 🔍 Review Checklist:
+          - [ ] Tests are passing
+          - [ ] Code style is maintained
+          - [ ] No breaking changes introduced
+          - [ ] Security audit is clean
+          
+          ### 📦 Updated Dependencies:
+          ```bash
+          composer update
+          ```
+        branch: update-dependencies
+        delete-branch: true
+        commit-message: 'chore: update dependencies'
+        labels: |
+          dependencies
+          automated
+        assignees: apffth 

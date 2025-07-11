@@ -1,102 +1,36 @@
 <?php
 
 declare(strict_types=1);
-/**
- * This file is part of Hyperf.
- *
- * @link     https://www.hyperf.io
- * @document https://hyperf.wiki
- * @contact  group@hyperf.io
- * @license  https://github.com/hyperf/hyperf/blob/master/LICENSE
- */
-use PhpCsFixer\Config;
-use PhpCsFixer\Finder;
-use PhpCsFixer\Runner\Parallel\ParallelConfig;
 
-return (new Config())
-    ->setParallelConfig(new ParallelConfig(10, 20))
-    ->setRiskyAllowed(true)
-    ->setRules([
-        '@PSR2'               => true,
-        '@Symfony'            => true,
-        '@DoctrineAnnotation' => true,
-        '@PhpCsFixer'         => true,
-        'header_comment'      => [
-            'comment_type' => 'PHPDoc',
-            'header'       => '',
-            'separate'     => 'none',
-            'location'     => 'after_declare_strict',
-        ],
-        'array_syntax' => [
-            'syntax' => 'short',
-        ],
-        'list_syntax' => [
-            'syntax' => 'short',
-        ],
-        'concat_space' => [
-            'spacing' => 'one',
-        ],
-        'global_namespace_import' => [
-            'import_classes'   => true,
-            'import_constants' => true,
-            'import_functions' => null,
-        ],
-        'blank_line_before_statement' => [
-            'statements' => [
-                'declare',
-            ],
-        ],
-        'general_phpdoc_annotation_remove' => [
-            'annotations' => [
-                'author',
-            ],
-        ],
-        'ordered_imports' => [
-            'imports_order' => [
-                'class', 'function', 'const',
-            ],
-            'sort_algorithm' => 'alpha',
-        ],
-        'single_line_comment_style' => [
-            'comment_types' => [
-            ],
-        ],
-        'yoda_style' => [
-            'always_move_variable' => false,
-            'equal'                => false,
-            'identical'            => false,
-        ],
-        'phpdoc_align' => [
-            'align' => 'left',
-        ],
-        'multiline_whitespace_before_semicolons' => [
-            'strategy' => 'no_multi_line',
-        ],
-        'constant_case' => [
-            'case' => 'lower',
-        ],
-        'binary_operator_spaces' => [
-            'default' => 'align_single_space',
-        ],
-        'class_attributes_separation'       => true,
-        'combine_consecutive_unsets'        => true,
-        'declare_strict_types'              => true,
-        'linebreak_after_opening_tag'       => true,
-        'lowercase_static_reference'        => true,
-        'no_useless_else'                   => true,
-        'no_unused_imports'                 => true,
-        'not_operator_with_successor_space' => true,
-        'not_operator_with_space'           => false,
-        'ordered_class_elements'            => true,
-        'php_unit_strict'                   => false,
-        'phpdoc_separation'                 => false,
-        'single_quote'                      => true,
-        'standardize_not_equals'            => true,
-        'multiline_comment_opening_closing' => true,
+$finder = PhpCsFixer\Finder::create()
+    ->in([
+        __DIR__ . '/src',
+        __DIR__ . '/tests',
     ])
-    ->setFinder(
-        Finder::create()
-            ->in(__DIR__ . DIRECTORY_SEPARATOR . 'src')
-            ->in(__DIR__ . DIRECTORY_SEPARATOR . 'config')
-    )
-    ->setUsingCache(false);
+    ->exclude([
+        'vendor',
+    ]);
+
+return (new PhpCsFixer\Config())
+    ->setRules([
+        '@PSR12' => true,
+        'array_syntax' => ['syntax' => 'short'],
+        'ordered_imports' => ['sort_algorithm' => 'alpha'],
+        'no_unused_imports' => true,
+        'not_operator_with_successor_space' => true,
+        'trailing_comma_in_multiline' => true,
+        'phpdoc_scalar' => true,
+        'unary_operator_spaces' => true,
+        'binary_operator_spaces' => true,
+        'blank_line_before_statement' => [
+            'statements' => ['break', 'continue', 'declare', 'return', 'throw', 'try'],
+        ],
+        'phpdoc_single_line_var_spacing' => true,
+        'phpdoc_var_without_name' => true,
+        'method_argument_space' => [
+            'on_multiline' => 'ensure_fully_multiline',
+            'keep_multiple_spaces_after_comma' => true,
+        ],
+        'single_trait_insert_per_statement' => true,
+    ])
+    ->setFinder($finder);

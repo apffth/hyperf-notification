@@ -1,0 +1,15 @@
+parameters:
+    level: 8
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - vendor
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+    ignoreErrors:
+        - '#Call to an undefined method [a-zA-Z0-9\\_]+::getKey\(\)#'
+        - '#Call to an undefined method [a-zA-Z0-9\\_]+::routeNotificationFor\(\)#'
+    tmpDir: build/phpstan
+    parallel:
+        maximumNumberOfProcesses: 4 

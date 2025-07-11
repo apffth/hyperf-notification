@@ -1,0 +1,40 @@
+name: Security Scan
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # 每周日运行
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.1
+        extensions: mbstring, xml, ctype, iconv, intl
+    
+    - name: Validate composer.json
+      run: composer validate --strict
+    
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress --no-interaction
+    
+    - name: Run Security Check
+      run: composer audit --format=json --audit-format=json
+    
+    - name: Run PHPStan Security Rules
+      run: vendor/bin/phpstan analyse src tests --level=8 --no-progress
+    
+    - name: Check for known vulnerabilities
+      run: |
+        echo "Checking for known vulnerabilities..."
+        composer audit --format=text || true 

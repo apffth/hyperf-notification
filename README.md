@@ -5,6 +5,8 @@
 [![License](https://img.shields.io/packagist/l/apffth/hyperf-notification.svg?style=flat-square)](https://github.com/apffth/hyperf-notification/blob/master/LICENSE)
 [![PHP Version](https://img.shields.io/packagist/php-v/apffth/hyperf-notification.svg?style=flat-square)](https://packagist.org/packages/apffth/hyperf-notification)
 [![Hyperf Version](https://img.shields.io/badge/Hyperf-%3E%3D3.0-blue.svg?style=flat-square)](https://hyperf.io)
+[![CI](https://img.shields.io/github/actions/workflow/status/apffth/hyperf-notification/ci.yml?branch=master&style=flat-square)](https://github.com/apffth/hyperf-notification/actions/workflows/ci.yml)
+[![Code Style](https://img.shields.io/github/actions/workflow/status/apffth/hyperf-notification/cs.yml?branch=master&style=flat-square)](https://github.com/apffth/hyperf-notification/actions/workflows/cs.yml)
 [![GitHub Stars](https://img.shields.io/github/stars/apffth/hyperf-notification.svg?style=flat-square)](https://github.com/apffth/hyperf-notification/stargazers)
 [![GitHub Forks](https://img.shields.io/github/forks/apffth/hyperf-notification.svg?style=flat-square)](https://github.com/apffth/hyperf-notification/network)
 [![GitHub Issues](https://img.shields.io/github/issues/apffth/hyperf-notification.svg?style=flat-square)](https://github.com/apffth/hyperf-notification/issues)
