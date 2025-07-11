@@ -14,6 +14,9 @@ use Hyperf\Contract\ConfigInterface;
 use Hyperf\Di\Container;
 use Hyperf\Di\Definition\DefinitionSourceFactory;
 use Mockery;
+use Monolog\Formatter\LineFormatter;
+use Monolog\Handler\StreamHandler;
+use Monolog\Level;
 use PHPUnit\Framework\TestCase as BaseTestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -56,43 +59,43 @@ class TestCase extends BaseTestCase
             ],
             'databases' => [
                 'default' => [
-                    'driver' => 'mysql',
-                    'host' => 'localhost',
-                    'port' => 3306,
-                    'database' => 'test',
-                    'username' => 'test',
-                    'password' => 'test',
-                    'charset' => 'utf8mb4',
+                    'driver'    => 'mysql',
+                    'host'      => 'localhost',
+                    'port'      => 3306,
+                    'database'  => 'test',
+                    'username'  => 'test',
+                    'password'  => 'test',
+                    'charset'   => 'utf8mb4',
                     'collation' => 'utf8mb4_unicode_ci',
-                    'prefix' => '',
-                    'pool' => [
+                    'prefix'    => '',
+                    'pool'      => [
                         'min_connections' => 1,
                         'max_connections' => 10,
                         'connect_timeout' => 10.0,
-                        'wait_timeout' => 3.0,
-                        'heartbeat' => -1,
-                        'max_idle_time' => 60.0,
+                        'wait_timeout'    => 3.0,
+                        'heartbeat'       => -1,
+                        'max_idle_time'   => 60.0,
                     ],
                 ],
             ],
             'logger' => [
                 'default' => [
                     'handler' => [
-                        'class' => \Monolog\Handler\StreamHandler::class,
+                        'class'       => StreamHandler::class,
                         'constructor' => [
                             'stream' => 'php://stdout',
-                            'level' => \Monolog\Level::Debug,
+                            'level'  => Level::Debug,
                         ],
                     ],
                     'formatter' => [
-                        'class' => \Monolog\Formatter\LineFormatter::class,
+                        'class'       => LineFormatter::class,
                         'constructor' => [],
                     ],
                 ],
             ],
             'mail' => [
                 'default_mailer' => 'array',
-                'mailers' => [
+                'mailers'        => [
                     'array' => [
                         'transport' => 'array',
                     ],

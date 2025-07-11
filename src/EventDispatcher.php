@@ -228,6 +228,7 @@ class EventDispatcher implements EventDispatcherInterface
             if (! $payload->shouldSend()) {
                 break;
             }
+
             try {
                 if (is_callable($listener)) {
                     $response = call_user_func($listener, $payload);

@@ -9,6 +9,7 @@ use Apffth\Hyperf\Notification\Exceptions\NotificationException;
 use Apffth\Hyperf\Notification\Tests\stubs\TestNotification;
 use Apffth\Hyperf\Notification\Tests\stubs\User;
 use Apffth\Hyperf\Notification\Tests\TestCase;
+use Exception;
 
 /**
  * @internal
@@ -24,11 +25,11 @@ class MailChannelTest extends TestCase
         // Set valid mail configuration to avoid constructor errors
         $this->setConfig('mail.default_mailer', 'smtp');
         $this->setConfig('mail.mailers.smtp', [
-            'host' => 'localhost',
-            'port' => 25,
+            'host'       => 'localhost',
+            'port'       => 25,
             'encryption' => null,
-            'username' => null,
-            'password' => null,
+            'username'   => null,
+            'password'   => null,
         ]);
 
         $channel = $this->getContainer()->get(MailChannel::class);
@@ -40,7 +41,7 @@ class MailChannelTest extends TestCase
             // If it somehow succeeds (unlikely), assert success
             $this->assertIsArray($result);
             $this->assertTrue($result['success']);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // We expect a connection failure, not a configuration error
             $this->assertStringContainsString('Connection', $e->getMessage());
         }
@@ -54,11 +55,11 @@ class MailChannelTest extends TestCase
         // Set complete mail configuration to avoid configuration errors
         $this->setConfig('mail.default_mailer', 'smtp');
         $this->setConfig('mail.mailers.smtp', [
-            'host' => 'localhost',
-            'port' => 25,
+            'host'       => 'localhost',
+            'port'       => 25,
             'encryption' => null,
-            'username' => null,
-            'password' => null,
+            'username'   => null,
+            'password'   => null,
         ]);
         $this->setConfig('mail.from.address', 'test@example.com');
         $this->setConfig('mail.from.name', 'Test');

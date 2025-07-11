@@ -16,7 +16,7 @@ class User extends Model
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
-        $this->id    = $attributes['id'] ?? 1;
+        $this->id    = $attributes['id']    ?? 1;
         $this->email = $attributes['email'] ?? null;
     }
 
@@ -30,7 +30,7 @@ class User extends Model
         if ($channel === 'mail') {
             return $this->email;
         }
-        
+
         return null;
     }
 }

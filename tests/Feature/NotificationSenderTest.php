@@ -51,7 +51,7 @@ class NotificationSenderTest extends TestCase
 
         $sender = $this->getContainer()->get(NotificationSender::class);
         $sender->sendNow($user, $notification);
-        
+
         $this->assertTrue(true);
     }
 
