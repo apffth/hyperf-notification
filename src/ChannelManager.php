@@ -21,8 +21,8 @@ class ChannelManager
      * 默认渠道映射.
      */
     protected array $defaultChannels = [
-        'mail'      => MailChannel::class,
-        'database'  => DatabaseChannel::class,
+        'mail'     => MailChannel::class,
+        'database' => DatabaseChannel::class,
     ];
 
     public function __construct()
@@ -45,6 +45,7 @@ class ChannelManager
         }
 
         $this->channels[$name] = $channelClass;
+
         return $this;
     }
 
@@ -54,6 +55,7 @@ class ChannelManager
     public function registerInstance(string $name, ChannelInterface $channel): self
     {
         $this->channels[$name] = $channel;
+
         return $this;
     }
 
@@ -110,6 +112,7 @@ class ChannelManager
     public function remove(string $name): self
     {
         unset($this->channels[$name]);
+
         return $this;
     }
 
@@ -119,6 +122,7 @@ class ChannelManager
     public function clear(): self
     {
         $this->channels = $this->defaultChannels;
+
         return $this;
     }
 

@@ -11,12 +11,16 @@ use Apffth\Hyperf\Notification\Tests\stubs\User;
 use Apffth\Hyperf\Notification\Tests\TestCase;
 use Mockery;
 
+/**
+ * @internal
+ * @coversNothing
+ */
 class EventDispatcherTest extends TestCase
 {
     public function testEventDispatching()
     {
-        $dispatcher = $this->getContainer()->get(EventDispatcher::class);
-        $notifiable = new User();
+        $dispatcher   = $this->getContainer()->get(EventDispatcher::class);
+        $notifiable   = new User();
         $notification = new TestNotification();
 
         $listener = Mockery::mock();
@@ -29,7 +33,7 @@ class EventDispatcherTest extends TestCase
     public function testPreventSending()
     {
         $dispatcher = $this->getContainer()->get(EventDispatcher::class);
-        $event = new NotificationSending(new User(), new TestNotification(), 'mail');
+        $event      = new NotificationSending(new User(), new TestNotification(), 'mail');
 
         $dispatcher->listen(NotificationSending::class, function (NotificationSending $event) {
             $event->preventSending();
@@ -39,4 +43,4 @@ class EventDispatcherTest extends TestCase
 
         $this->assertFalse($event->shouldSend());
     }
-} 
+}

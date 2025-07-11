@@ -7,7 +7,6 @@ namespace Apffth\Hyperf\Notification\Tests\Feature;
 use Apffth\Hyperf\Notification\ChannelManager;
 use Apffth\Hyperf\Notification\Channels\ChannelInterface;
 use Apffth\Hyperf\Notification\Contracts\EventDispatcherInterface;
-use Apffth\Hyperf\Notification\EventDispatcher;
 use Apffth\Hyperf\Notification\Events\NotificationSent;
 use Apffth\Hyperf\Notification\NotificationJob;
 use Apffth\Hyperf\Notification\NotificationSender;
@@ -16,10 +15,13 @@ use Apffth\Hyperf\Notification\Tests\stubs\User;
 use Apffth\Hyperf\Notification\Tests\TestCase;
 use Hyperf\AsyncQueue\Driver\DriverFactory;
 use Hyperf\AsyncQueue\Driver\DriverInterface;
+use Hyperf\Di\Container;
 use Mockery;
 
 /**
- * @property \Hyperf\Di\Container $container
+ * @property Container $container
+ * @internal
+ * @coversNothing
  */
 class NotificationSenderTest extends TestCase
 {
@@ -64,4 +66,4 @@ class NotificationSenderTest extends TestCase
         $sender = $this->container->get(NotificationSender::class);
         $sender->send($user, $notification);
     }
-} 
+}

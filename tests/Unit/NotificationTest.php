@@ -7,6 +7,10 @@ namespace Apffth\Hyperf\Notification\Tests\Unit;
 use Apffth\Hyperf\Notification\Tests\stubs\TestNotification;
 use Apffth\Hyperf\Notification\Tests\TestCase;
 
+/**
+ * @internal
+ * @coversNothing
+ */
 class NotificationTest extends TestCase
 {
     public function testIdIsSet()
@@ -27,4 +31,4 @@ class NotificationTest extends TestCase
         $this->assertSame(10, $notification->getDelay());
         $this->assertSame(3, $notification->getTries());
     }
-} 
+}

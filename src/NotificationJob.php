@@ -33,6 +33,7 @@ class NotificationJob extends Job
             if (method_exists($this->notification, 'failed')) {
                 $this->notification->failed($e);
             }
+
             throw $e;
         }
     }

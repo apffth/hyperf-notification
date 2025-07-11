@@ -8,6 +8,10 @@ use Apffth\Hyperf\Notification\Tests\stubs\User;
 use Apffth\Hyperf\Notification\Tests\TestCase;
 use Hyperf\Database\Model\Relations\MorphMany;
 
+/**
+ * @internal
+ * @coversNothing
+ */
 class NotifiableTest extends TestCase
 {
     public function testNotificationsRelation()
@@ -21,4 +25,4 @@ class NotifiableTest extends TestCase
         $user = new User(['email' => 'test@example.com']);
         $this->assertSame('test@example.com', $user->routeNotificationFor('mail'));
     }
-} 
+}

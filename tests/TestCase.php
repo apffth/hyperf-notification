@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Apffth\Hyperf\Notification\Tests;
 
 use Apffth\Hyperf\Notification\ChannelManager;
-use Apffth\Hyperf\Notification\ConfigProvider;
 use Apffth\Hyperf\Notification\Contracts\EventDispatcherInterface;
 use Apffth\Hyperf\Notification\EventDispatcher;
 use Apffth\Hyperf\Notification\TwigServiceProvider;
@@ -20,6 +19,10 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
+/**
+ * @internal
+ * @coversNothing
+ */
 class TestCase extends BaseTestCase
 {
     protected ?ContainerInterface $container = null;
@@ -50,22 +53,22 @@ class TestCase extends BaseTestCase
             ],
             'mail' => [
                 'default_mailer' => 'smtp',
-                'mailers' => [
+                'mailers'        => [
                     'smtp' => [
-                        'host' => 'localhost',
-                        'port' => 25,
+                        'host'       => 'localhost',
+                        'port'       => 25,
                         'encryption' => null,
-                        'username' => null,
-                        'password' => null,
+                        'username'   => null,
+                        'password'   => null,
                     ],
                 ],
                 'from' => [
                     'address' => 'test@example.com',
-                    'name' => 'Test',
+                    'name'    => 'Test',
                 ],
             ],
             'twig' => [
-                'paths' => [__DIR__ . '/stubs/views'],
+                'paths'   => [__DIR__ . '/stubs/views'],
                 'options' => ['cache' => false],
             ],
         ]);
@@ -86,11 +89,11 @@ class TestCase extends BaseTestCase
     }
 
     /**
-     * 设置配置值用于测试
+     * 设置配置值用于测试.
      */
     protected function setConfig(string $key, mixed $value): void
     {
         $config = $this->container->get(ConfigInterface::class);
         $config->set($key, $value);
     }
-} 
+}

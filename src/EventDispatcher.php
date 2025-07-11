@@ -276,7 +276,7 @@ class EventDispatcher implements EventDispatcherInterface
     protected function getProperties(Notification $notification): array
     {
         try {
-            $reflection  = new ReflectionClass($notification);
+            $reflection = new ReflectionClass($notification);
 
             $className = $reflection->getName();
 
@@ -318,6 +318,7 @@ class EventDispatcher implements EventDispatcherInterface
                 }
                 $result[$key] = $this->sanitizeValue($item); // 递归调用
             }
+
             return $result;
         }
 

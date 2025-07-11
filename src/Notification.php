@@ -12,11 +12,6 @@ abstract class Notification
     use Queueable;
 
     /**
-     * 通知 ID.
-     */
-    protected string $id = '';
-
-    /**
      * @var string[]
      */
     public array $sentChannels = [];
@@ -25,6 +20,11 @@ abstract class Notification
      * @var string[]
      */
     public array $processedInAfterSend = [];
+
+    /**
+     * 通知 ID.
+     */
+    protected string $id = '';
 
     /**
      * 渠道返回值存储.
@@ -176,16 +176,12 @@ abstract class Notification
      *
      * @param mixed $response 渠道的 send() 方法的返回值
      * @param string $channel 渠道名称
-     * @param mixed $notifiable
      */
     public function afterSend(mixed $response, string $channel, mixed $notifiable): void
     {
         // 用户可以在通知类中覆盖此方法
     }
 
-    /**
-     * @param string $channel
-     */
     public function addSentChannel(string $channel): void
     {
         $this->sentChannels[] = $channel;

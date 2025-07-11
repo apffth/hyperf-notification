@@ -47,10 +47,10 @@ class TwigServiceProvider
         $options = $config['options'] ?? [];
         $twig    = new Environment($loader, [
             'cache'            => $options['cache'] ? $options['cache_path'] : false,
-            'debug'            => $options['debug']                       ?? false,
-            'auto_reload'      => $options['auto_reload']           ?? false,
+            'debug'            => $options['debug']            ?? false,
+            'auto_reload'      => $options['auto_reload']      ?? false,
             'strict_variables' => $options['strict_variables'] ?? false,
-            'charset'          => $options['charset']                   ?? 'UTF-8',
+            'charset'          => $options['charset']          ?? 'UTF-8',
         ]);
 
         // 设置时区
@@ -82,6 +82,7 @@ class TwigServiceProvider
     public function createBodyRenderer(): BodyRendererInterface
     {
         $twig = $this->createTwigEnvironment();
+
         return new BodyRenderer($twig);
     }
 
@@ -101,6 +102,7 @@ class TwigServiceProvider
     public function renderEmailTemplate(string $template, array $context = []): string
     {
         $twig = $this->createTwigEnvironment();
+
         return $twig->render($template, $context);
     }
 
@@ -110,6 +112,7 @@ class TwigServiceProvider
     public function templateExists(string $template): bool
     {
         $twig = $this->createTwigEnvironment();
+
         return $twig->getLoader()->exists($template);
     }
 

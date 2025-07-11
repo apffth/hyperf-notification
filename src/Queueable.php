@@ -43,6 +43,7 @@ trait Queueable
     public function onQueue(string $queue): static
     {
         $this->queue = $queue;
+
         return $this;
     }
 
@@ -61,6 +62,7 @@ trait Queueable
     public function delay(int $delay): static
     {
         $this->delay = $delay;
+
         return $this;
     }
 
@@ -79,6 +81,7 @@ trait Queueable
     public function tries(int $tries): static
     {
         $this->tries = $tries;
+
         return $this;
     }
 

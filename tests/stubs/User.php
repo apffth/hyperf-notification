@@ -16,7 +16,7 @@ class User extends Model
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
-        $this->id = $attributes['id'] ?? 1;
+        $this->id    = $attributes['id']    ?? 1;
         $this->email = $attributes['email'] ?? 'test@example.com';
     }
 
@@ -29,4 +29,4 @@ class User extends Model
     {
         return $this->email;
     }
-} 
+}

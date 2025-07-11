@@ -45,6 +45,7 @@ class NotificationSender
     {
         if ($notification->shouldQueue($notifiable)) {
             $this->queueNotification($notifiable, $notification);
+
             return;
         }
 
@@ -120,8 +121,6 @@ class NotificationSender
             throw $failed;
         }
     }
-
-
 
     /**
      * Queue the given notification.

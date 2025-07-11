@@ -14,8 +14,7 @@ trait RoutesNotifications
     /**
      * Send the given notification.
      *
-     * @param  \Apffth\Hyperf\Notification\Notification  $notification
-     * @return void
+     * @param Notification $notification
      */
     public function notify($notification)
     {
@@ -25,13 +24,12 @@ trait RoutesNotifications
     /**
      * Get the notification routing information for the given channel.
      *
-     * @param  string  $channel
-     * @param  \Apffth\Hyperf\Notification\Notification|null  $notification
+     * @param null|Notification $notification
      * @return mixed
      */
     public function routeNotificationFor(string $channel, $notification = null)
     {
-        if (method_exists($this, $method = 'routeNotificationFor'.ucfirst($channel))) {
+        if (method_exists($this, $method = 'routeNotificationFor' . ucfirst($channel))) {
             return $this->{$method}($notification);
         }
 
@@ -42,4 +40,4 @@ trait RoutesNotifications
 
         return null;
     }
-} 
+}

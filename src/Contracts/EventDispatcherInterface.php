@@ -47,12 +47,12 @@ interface EventDispatcherInterface
     public function isEnabled(): bool;
 
     /**
-     * 获取日志实例
+     * 获取日志实例.
      */
     public function getLogger(): ?LoggerInterface;
 
     /**
-     * 设置日志实例
+     * 设置日志实例.
      */
     public function setLogger(?LoggerInterface $logger): void;
 }

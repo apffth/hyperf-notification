@@ -9,6 +9,10 @@ use Apffth\Hyperf\Notification\Channels\ChannelInterface;
 use Apffth\Hyperf\Notification\Channels\DatabaseChannel;
 use Apffth\Hyperf\Notification\Tests\TestCase;
 
+/**
+ * @internal
+ * @coversNothing
+ */
 class ChannelManagerTest extends TestCase
 {
     public function testDefaultChannelsAreRegistered()
@@ -27,4 +31,4 @@ class ChannelManagerTest extends TestCase
 
         $this->assertSame($mockChannel, $manager->get('custom'));
     }
-} 
+}

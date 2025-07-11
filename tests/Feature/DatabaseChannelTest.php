@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace Apffth\Hyperf\Notification\Tests\Feature;
 
 use Apffth\Hyperf\Notification\Channels\DatabaseChannel;
-use Apffth\Hyperf\Notification\Notification;
 use Apffth\Hyperf\Notification\Tests\stubs\TestNotification;
 use Apffth\Hyperf\Notification\Tests\stubs\User;
 use Apffth\Hyperf\Notification\Tests\TestCase;
 use Hyperf\DbConnection\Db;
 
+/**
+ * @internal
+ * @coversNothing
+ */
 class DatabaseChannelTest extends TestCase
 {
     protected function tearDown(): void
@@ -35,4 +38,4 @@ class DatabaseChannelTest extends TestCase
 
         $this->assertTrue($exists);
     }
-} 
+}

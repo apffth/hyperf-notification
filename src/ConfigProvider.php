@@ -16,7 +16,7 @@ class ConfigProvider
             'dependencies' => [
                 EventDispatcherInterface::class => EventDispatcher::class,
             ],
-            'publish'      => [
+            'publish' => [
                 [
                     'id'          => 'config',
                     'description' => 'The config for notification.',

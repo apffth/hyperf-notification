@@ -9,9 +9,7 @@ use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 
 class TestNotification extends Notification
 {
-    public function __construct(public string $message = 'Test Message')
-    {
-    }
+    public function __construct(public string $message = 'Test Message') {}
 
     public function via($notifiable): array
     {
@@ -30,4 +28,4 @@ class TestNotification extends Notification
     {
         return ['message' => $this->message];
     }
-} 
+}
