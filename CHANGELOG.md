@@ -1,5 +1,38 @@
 # 更新日志
 
+## [1.0.2] - 2025-01-20
+
+### 新增功能
+- **增强的日志记录**: 在 `NotificationSending` 事件中自动记录通知类的所有属性信息
+- **敏感信息保护**: 自动检测并过滤敏感信息（如密码、API密钥等），替换为 `[SENSITIVE_DATA]`
+- **性能优化**: 避免在日志记录时重复执行 `toXxxx()` 方法，提升性能并防止副作用
+
+### 技术改进
+- **事件系统优化**: 修改 `NotificationSending` 事件类，添加渠道数据缓存功能
+- **NotificationSender 增强**: 在发送通知前预先获取渠道数据，避免重复执行
+- **EventDispatcher 重构**: 简化日志记录逻辑，直接从事件中获取缓存的渠道数据
+- **数据清理机制**: 添加递归的敏感数据清理功能，支持数组和对象类型的数据过滤
+
+### 架构变更
+- **NotificationSending 事件**: 新增 `getChannelData()` 和 `setChannelData()` 方法
+- **NotificationSender**: 新增 `getChannelData()` 方法用于预先获取渠道数据
+- **EventDispatcher**: 重构 `dispatchSending()` 方法，使用 `getProperties()` 替代 `getConstructorParams()`
+
+### 安全性改进
+- **敏感信息过滤**: 支持过滤包含 `password`、`token`、`secret`、`key`、`api_key`、`private_key` 等关键词的数据
+- **递归过滤**: 支持对嵌套数组中的敏感信息进行过滤
+- **对象保护**: 自动跳过对象类型的属性，避免潜在的安全风险
+
+### 兼容性
+- 保持了与现有代码的完全向后兼容性
+- 现有的通知类无需任何修改
+- 事件监听器无需更新
+
+### 性能提升
+- 避免了重复执行 `toXxxx()` 方法导致的性能损失
+- 减少了不必要的对象实例化
+- 优化了日志记录的执行效率
+
 ## [1.0.1] - 2025-07-10
 
 ### 更改

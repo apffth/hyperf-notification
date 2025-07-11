@@ -309,6 +309,18 @@ class EventDispatcher implements EventDispatcherInterface
      */
     protected function sanitizeValue($value): mixed
     {
+        if (is_array($value)) {
+            $result = [];
+            foreach ($value as $key => $item) {
+                // 为了保持一致性，不记录数组中的对象
+                if (is_object($item)) {
+                    continue;
+                }
+                $result[$key] = $this->sanitizeValue($item); // 递归调用
+            }
+            return $result;
+        }
+
         if (is_string($value)) {
             // 检查是否包含敏感信息
             $sensitivePatterns = [
