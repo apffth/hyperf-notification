@@ -1,5 +1,15 @@
 # Hyperf Notification
 
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/apffth/hyperf-notification.svg?style=flat-square)](https://packagist.org/packages/apffth/hyperf-notification)
+[![Total Downloads](https://img.shields.io/packagist/dt/apffth/hyperf-notification.svg?style=flat-square)](https://packagist.org/packages/apffth/hyperf-notification)
+[![License](https://img.shields.io/packagist/l/apffth/hyperf-notification.svg?style=flat-square)](https://github.com/apffth/hyperf-notification/blob/master/LICENSE)
+[![PHP Version](https://img.shields.io/packagist/php-v/apffth/hyperf-notification.svg?style=flat-square)](https://packagist.org/packages/apffth/hyperf-notification)
+[![Hyperf Version](https://img.shields.io/badge/Hyperf-%3E%3D3.0-blue.svg?style=flat-square)](https://hyperf.io)
+[![GitHub Stars](https://img.shields.io/github/stars/apffth/hyperf-notification.svg?style=flat-square)](https://github.com/apffth/hyperf-notification/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/apffth/hyperf-notification.svg?style=flat-square)](https://github.com/apffth/hyperf-notification/network)
+[![GitHub Issues](https://img.shields.io/github/issues/apffth/hyperf-notification.svg?style=flat-square)](https://github.com/apffth/hyperf-notification/issues)
+[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/apffth/hyperf-notification.svg?style=flat-square)](https://github.com/apffth/hyperf-notification/pulls)
+
 一个专为 Hyperf 框架设计的通知系统，兼容 Laravel 通知的 API 设计，提供灵活、可扩展的通知发送功能。
 
 ## 特性
@@ -47,7 +57,7 @@ php bin/hyperf.php migrate
 
 ### 1. 创建通知类
 
-使用 `gen:notification` 命令可以快速生成一个通知类。（暂示支持命令式创建通知类）
+使用 `gen:notification` 命令可以快速生成一个通知类。（暂示未支持命令式创建通知类，请手动创建）
 
 ```bash
 php bin/hyperf.php gen:notification WelcomeNotification
@@ -401,6 +411,14 @@ $senderMock->shouldReceive('send')->once();
 $this->container->set(NotificationSender::class, $senderMock);
 
 // 执行您的业务逻辑...
+```
+
+## 快速安装
+
+[![Composer](https://img.shields.io/badge/Composer-Install-blue.svg?style=for-the-badge&logo=composer)](https://packagist.org/packages/apffth/hyperf-notification)
+
+```bash
+composer require apffth/hyperf-notification
 ```
 
 ## 许可证
