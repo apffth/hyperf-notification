@@ -52,20 +52,7 @@ jobs:
       run: composer validate --strict --no-interaction
     
     - name: Install dependencies
-      timeout-minutes: 10
-      run: |
-        # Set composer timeout and disable warnings about abandoned packages
-        composer config --global process-timeout 600
-        export COMPOSER_NO_INTERACTION=1
-        
-        if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then
-          echo "Installing composer dependencies..."
-          composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader --no-suggest 2>/dev/null || composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader
-        else
-          echo "Using cached vendor directory"
-          # Still run install to ensure dev dependencies are present
-          composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader --no-suggest 2>/dev/null || composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader
-        fi
+      run: composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader
     
     - name: Create build directory
       run: mkdir -p build/cache build/coverage
