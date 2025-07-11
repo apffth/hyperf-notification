@@ -40,11 +40,32 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-php-${{ matrix.php }}-composer-
     
+    - name: Cache vendor directory
+      uses: actions/cache@v3
+      with:
+        path: vendor
+        key: ${{ runner.os }}-php-${{ matrix.php }}-vendor-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-${{ matrix.php }}-vendor-
+    
     - name: Validate composer.json
       run: composer validate --strict --no-interaction
     
     - name: Install dependencies
-      run: composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader
+      timeout-minutes: 10
+      run: |
+        # Set composer timeout and disable warnings about abandoned packages
+        composer config --global process-timeout 600
+        export COMPOSER_NO_INTERACTION=1
+        
+        if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then
+          echo "Installing composer dependencies..."
+          composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader --no-suggest 2>/dev/null || composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader
+        else
+          echo "Using cached vendor directory"
+          # Still run install to ensure dev dependencies are present
+          composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader --no-suggest 2>/dev/null || composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader
+        fi
     
     - name: Create build directory
       run: mkdir -p build/cache build/coverage
