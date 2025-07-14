@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1752224423">
-  <project timestamp="1752224423">
+<coverage generated="1752464608">
+  <project timestamp="1752464608">
     <file name="/home/runner/work/hyperf-notification/hyperf-notification/src/ChannelManager.php">
       <class name="Apffth\Hyperf\Notification\ChannelManager" namespace="global">
         <metrics complexity="16" methods="9" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="29" coveredstatements="0" elements="38" coveredelements="0"/>
