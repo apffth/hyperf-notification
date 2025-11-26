@@ -143,6 +143,16 @@ abstract class Notification
     }
 
     /**
+     * 获取通知的 Web Push 表示（浏览器推送）。
+     * @param mixed $notifiable
+     * @return mixed
+     */
+    public function toWebPush($notifiable)
+    {
+        return null;
+    }
+
+    /**
      * 获取通知的语音表示。
      * @param mixed $notifiable
      * @return mixed
