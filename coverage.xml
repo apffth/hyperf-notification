@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1763955401">
-  <project timestamp="1763955401">
+<coverage generated="1764561277">
+  <project timestamp="1764561277">
     <file name="/home/runner/work/hyperf-notification/hyperf-notification/src/ChannelManager.php">
       <class name="Apffth\Hyperf\Notification\ChannelManager" namespace="global">
         <metrics complexity="16" methods="9" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="29" coveredstatements="0" elements="38" coveredelements="0"/>
@@ -430,7 +430,7 @@
     </file>
     <file name="/home/runner/work/hyperf-notification/hyperf-notification/src/Notification.php">
       <class name="Apffth\Hyperf\Notification\Notification" namespace="global">
-        <metrics complexity="24" methods="21" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="26" coveredstatements="0" elements="47" coveredelements="0"/>
+        <metrics complexity="25" methods="22" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="27" coveredstatements="0" elements="49" coveredelements="0"/>
       </class>
       <line num="38" type="method" name="via" visibility="public" complexity="0" crap="0" count="0"/>
       <line num="43" type="method" name="getId" visibility="public" complexity="1" crap="2" count="0"/>
@@ -456,29 +456,31 @@
       <line num="132" type="stmt" count="0"/>
       <line num="140" type="method" name="toAppPush" visibility="public" complexity="1" crap="2" count="0"/>
       <line num="142" type="stmt" count="0"/>
-      <line num="150" type="method" name="toVoice" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="150" type="method" name="toWebPush" visibility="public" complexity="1" crap="2" count="0"/>
       <line num="152" type="stmt" count="0"/>
-      <line num="161" type="method" name="afterChannelsSend" visibility="public" complexity="3" crap="12" count="0"/>
-      <line num="163" type="stmt" count="0"/>
-      <line num="164" type="stmt" count="0"/>
-      <line num="165" type="stmt" count="0"/>
-      <line num="168" type="stmt" count="0"/>
-      <line num="170" type="stmt" count="0"/>
-      <line num="180" type="method" name="afterSend" visibility="public" complexity="1" crap="2" count="0"/>
-      <line num="183" type="stmt" count="0"/>
-      <line num="185" type="method" name="addSentChannel" visibility="public" complexity="1" crap="2" count="0"/>
-      <line num="187" type="stmt" count="0"/>
-      <line num="193" type="method" name="setChannelResponses" visibility="public" complexity="1" crap="2" count="0"/>
-      <line num="195" type="stmt" count="0"/>
-      <line num="201" type="method" name="getChannelResponses" visibility="public" complexity="1" crap="2" count="0"/>
-      <line num="203" type="stmt" count="0"/>
-      <line num="209" type="method" name="getChannelResponse" visibility="public" complexity="1" crap="2" count="0"/>
-      <line num="211" type="stmt" count="0"/>
-      <line num="217" type="method" name="hasChannelResponse" visibility="public" complexity="1" crap="2" count="0"/>
-      <line num="219" type="stmt" count="0"/>
-      <line num="225" type="method" name="getFirstChannelResponse" visibility="public" complexity="2" crap="6" count="0"/>
-      <line num="227" type="stmt" count="0"/>
-      <metrics loc="230" ncloc="133" classes="1" methods="21" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="26" coveredstatements="0" elements="47" coveredelements="0"/>
+      <line num="160" type="method" name="toVoice" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="162" type="stmt" count="0"/>
+      <line num="171" type="method" name="afterChannelsSend" visibility="public" complexity="3" crap="12" count="0"/>
+      <line num="173" type="stmt" count="0"/>
+      <line num="174" type="stmt" count="0"/>
+      <line num="175" type="stmt" count="0"/>
+      <line num="178" type="stmt" count="0"/>
+      <line num="180" type="stmt" count="0"/>
+      <line num="190" type="method" name="afterSend" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="193" type="stmt" count="0"/>
+      <line num="195" type="method" name="addSentChannel" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="197" type="stmt" count="0"/>
+      <line num="203" type="method" name="setChannelResponses" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="205" type="stmt" count="0"/>
+      <line num="211" type="method" name="getChannelResponses" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="213" type="stmt" count="0"/>
+      <line num="219" type="method" name="getChannelResponse" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="221" type="stmt" count="0"/>
+      <line num="227" type="method" name="hasChannelResponse" visibility="public" complexity="1" crap="2" count="0"/>
+      <line num="229" type="stmt" count="0"/>
+      <line num="235" type="method" name="getFirstChannelResponse" visibility="public" complexity="2" crap="6" count="0"/>
+      <line num="237" type="stmt" count="0"/>
+      <metrics loc="240" ncloc="138" classes="1" methods="22" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="27" coveredstatements="0" elements="49" coveredelements="0"/>
     </file>
     <file name="/home/runner/work/hyperf-notification/hyperf-notification/src/NotificationJob.php">
       <class name="Apffth\Hyperf\Notification\NotificationJob" namespace="global">
@@ -646,6 +648,6 @@
       <line num="128" type="stmt" count="0"/>
       <metrics loc="133" ncloc="104" classes="1" methods="6" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="37" coveredstatements="0" elements="43" coveredelements="0"/>
     </file>
-    <metrics files="20" loc="1937" ncloc="1413" classes="17" methods="108" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="425" coveredstatements="0" elements="533" coveredelements="0"/>
+    <metrics files="20" loc="1947" ncloc="1418" classes="17" methods="109" coveredmethods="0" conditionals="0" coveredconditionals="0" statements="426" coveredstatements="0" elements="535" coveredelements="0"/>
   </project>
 </coverage>
