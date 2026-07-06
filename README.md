@@ -207,6 +207,83 @@ public function shouldQueue($notifiable): bool
 }
 ```
 
+## 发送前数据准备（`beforeSend`）
+
+### 使用场景
+
+如果您的通知类在构造函数中执行了较重的逻辑（例如数据库查询、外部 RPC 调用、短链生成等），这些逻辑会在 `notify()` 调用的当下（即调用方协程）**同步执行**——即使该通知会被推入队列异步发送，因为 `Notification` 对象是先完整构建好，才被放入队列 Job 的。
+
+`beforeSend()` 钩子专门用来解决这个问题：它**仅在通知即将真正发送前（`via()`/`toXxx()` 之前）调用一次**，无论是同步发送还是异步队列路径皆生效。当通知被队列化时，`beforeSend()` 会被推迟到队列消费协程中执行，调用方（例如同步 gRPC handler）在 `dispatch()` 后可以立即返回，不再被下游服务的网络延迟/超时拖累。
+
+框架会自动保证 `beforeSend()` 幂等（仅执行一次），下游通知类**不需要**自己维护 `resolved`/`prepared` 之类的标志位。
+
+### Before / After 对比范例
+
+**Before**：短链生成逻辑放在构造函数里，`notify()` 调用时同步执行。
+
+```php
+class OrderShippedNotification extends Notification
+{
+    use Queueable;
+
+    private string $shortUrl;
+
+    public function __construct(private Order $order)
+    {
+        // 每次 new 都会同步触发一次跨服务 RPC 调用，
+        // 即使本通知稍后会被推入队列异步发送。
+        $this->shortUrl = $this->shortLinkService->generate($order->getTrackingUrl());
+    }
+
+    public function via($notifiable): array
+    {
+        return ['sms'];
+    }
+
+    public function toSms($notifiable)
+    {
+        return "您的包裹已发货，查看物流：{$this->shortUrl}";
+    }
+}
+```
+
+**After**：把短链生成逻辑搬到 `beforeSend()`，仅在真正发送前（队列消费协程中）才执行。
+
+```php
+class OrderShippedNotification extends Notification
+{
+    use Queueable;
+
+    private string $shortUrl;
+
+    public function __construct(private Order $order) {}
+
+    protected function beforeSend(mixed $notifiable): void
+    {
+        // 仅在即将真正发送前执行一次，若走队列路径，
+        // 这里的 RPC 调用发生在队列消费协程，不会阻塞调用方。
+        $this->shortUrl = $this->shortLinkService->generate($this->order->getTrackingUrl());
+    }
+
+    public function via($notifiable): array
+    {
+        return ['sms'];
+    }
+
+    public function toSms($notifiable)
+    {
+        return "您的包裹已发货，查看物流：{$this->shortUrl}";
+    }
+}
+```
+
+### 注意事项
+
+- **此钩子整个发送流程仅触发一次，不随渠道数量重复**，这一点与逐渠道触发的 `afterSend()` 语义不同，请勿混淆。
+- **`beforeSend()` 抛出异常会导致本次发送的所有渠道皆不执行**（连 `via()` 都不会被调用），这与 `sendNow()` 内部逐渠道 `try/catch`（一个渠道失败不影响其他渠道）的隔离粒度不同：数据都没准备好，各渠道大概率都发不出去，因此设计为整体失败。
+  - 队列路径：异常会被 `NotificationJob` 捕获并触发 `failed()`，随后重新抛出交由 `Hyperf\AsyncQueue` 按 `tries()`/`delay()` 设定重试；由于异常发生在幂等标志被置位之前，下次重试会重新执行 `beforeSend()`。
+  - 同步路径：异常直接冒泡给调用 `notify()` 的调用方，与现有 `via()`/`toXxx()` 抛异常时的行为一致。
+
 ## 事件系统
 
 本组件与 Hyperf 原生的事件系统完全集成。您可以创建标准的事件监听器来监听通知的生命周期事件。

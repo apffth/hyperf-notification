@@ -64,6 +64,7 @@ class NotificationSender
     public function sendNow($notifiable, Notification $notification): void
     {
         $notification->setId();
+        $notification->beforeSendOnce($notifiable);
 
         $channels = collect($notification->via($notifiable))
             ->filter(fn ($channel) => ! in_array($channel, $notification->sentChannels))
