@@ -32,10 +32,30 @@ abstract class Notification
     protected array $channelResponses = [];
 
     /**
+     * 标记 beforeSend() 是否已执行，用于保证幂等（仅执行一次）。
+     */
+    private bool $prepared = false;
+
+    /**
      * 获取通知应该发送的渠道。
      * @param mixed $notifiable
      */
     abstract public function via($notifiable): array;
+
+    /**
+     * 框架内部调用入口，确保 beforeSend() 只执行一次。
+     * 此方法是 final 的，以确保其幂等保护逻辑不被意外覆盖。
+     */
+    final public function beforeSendOnce(mixed $notifiable): void
+    {
+        if ($this->prepared) {
+            return;
+        }
+
+        $this->beforeSend($notifiable);
+
+        $this->prepared = true;
+    }
 
     /**
      * 获取通知 ID.
@@ -235,5 +255,21 @@ abstract class Notification
     public function getFirstChannelResponse(): mixed
     {
         return reset($this->channelResponses) ?: null;
+    }
+
+    /**
+     * 发送前的数据准备钩子（可覆盖）。
+     *
+     * 仅在通知即将真正发送前（via()/toXxx() 之前）调用一次，且无论走同步发送
+     * 或异步队列（NotificationJob）皆保证只执行一次。适合把原本放在建构函数里、
+     * 且依赖外部资源（DB 查询、RPC 调用、短链生成等）的重逻辑搬移至此，
+     * 避免这些副作用在呼叫方（例如同步 RPC 请求协程）中被同步执行。
+     *
+     * 注意：此钩子与 afterSend() 不同，不会随渠道数量重复调用，
+     * 整个发送过程（不论最终发送几个渠道）仅触发一次。
+     */
+    protected function beforeSend(mixed $notifiable): void
+    {
+        // 用户可以在通知类中覆盖此方法
     }
 }
